@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import gsap from 'gsap';
-import img from '../assets/Images/hr-employee-connection.png'
-import logo from '../assets/Images/SkillPORT_logo.png'
-import { useNavigate } from "react-router-dom";
+import img from '../assets/Images/hr-employee-connection.png';
+import logo from '../assets/Images/SkillPORT_logo.png';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 
 
@@ -82,16 +83,13 @@ const Login = () => {
             if (response.ok) {
                 const data = await response.json();
                 console.log('Login success:', data);
-
-                // 🔥 Show OTP UI
                 setStep("otp");
-
             } else {
-                alert('Login failed. Please check your credentials.');
+                toast.error('Login failed. Please check your credentials.');
             }
         } catch (error) {
             console.error('Error during login:', error);
-            alert('An error occurred during login.');
+            toast.error('An error occurred during login.');
         }
     };
 
@@ -133,7 +131,7 @@ const Login = () => {
         const finalOtp = otp.join("");
 
         if (finalOtp.length !== 6) {
-            alert("Please enter full 6 digit OTP");
+            toast.error("Please enter full 6 digit OTP");
             return;
         }
 
@@ -150,15 +148,14 @@ const Login = () => {
             if (response.ok) {
                 const data = await response.json();
                 console.log("OTP Verified Success", data);
-
                 navigate("/dashboard");
             } else {
-                alert("Invalid OTP, please try again");
+                toast.error("Invalid OTP, please try again");
             }
 
         } catch (err) {
             console.error("OTP verify error:", err);
-            alert("Error verifying OTP");
+            toast.error("Error verifying OTP");
         }
     };
 
