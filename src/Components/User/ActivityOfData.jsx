@@ -17,6 +17,8 @@ const ActivityOfData = ({
   verificationStatus,
   reportsCount = 0,
   placement = 'bottom',
+  className = '',
+  style = {},
   onViewProfile,
   onViewActivity,
   onRevokeVerification,
@@ -40,7 +42,10 @@ const ActivityOfData = ({
       : 'top-9';
 
   return (
-    <div className={`absolute right-0 ${containerPositionClasses} z-30 w-64 rounded-2xl border border-slate-200 bg-white py-2 shadow-xl shadow-slate-200`}>
+    <div
+      className={`absolute right-0 ${containerPositionClasses} z-30 w-64 rounded-2xl border border-slate-200 bg-white py-2 shadow-xl shadow-slate-200 ${className}`}
+      style={style}
+    >
       <div className="flex items-center justify-between px-4 pb-2">
         <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
           User Actions
@@ -70,13 +75,13 @@ const ActivityOfData = ({
           <FilePlus2 className="h-4 w-4 text-slate-400" />
           Add Admin Note
         </button>
-        <button
+        {/* <button
           type="button"
           className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left hover:bg-slate-50"
         >
           <Mail className="h-4 w-4 text-slate-400" />
           Send Email
-        </button>
+        </button> */}
       </div>
 
       <div className="my-2 h-px bg-slate-100" />
@@ -106,7 +111,7 @@ const ActivityOfData = ({
               onClick={onSoftDeleteUser}
             >
               <Trash2 className="h-4 w-4" />
-              Soft Delete User
+              Delete User
             </button>
           </>
         )}
@@ -143,7 +148,7 @@ const ActivityOfData = ({
               onClick={onSoftDeleteUser}
             >
               <Trash2 className="h-4 w-4" />
-              Soft Delete User
+              Delete User
             </button>
           </>
         )}
@@ -172,7 +177,7 @@ const ActivityOfData = ({
               onClick={onSoftDeleteUser}
             >
               <Trash2 className="h-4 w-4" />
-              Soft Delete User
+              Delete User
             </button>
           </>
         )}
@@ -201,7 +206,7 @@ const ActivityOfData = ({
               onClick={onSoftDeleteUser}
             >
               <Trash2 className="h-4 w-4" />
-              Soft Delete User
+              Delete User
             </button>
           </>
         )}
@@ -230,7 +235,7 @@ const ActivityOfData = ({
               onClick={onSoftDeleteUser}
             >
               <Trash2 className="h-4 w-4" />
-              Soft Delete User
+              Delete User
             </button>
           </>
         )}
@@ -256,7 +261,7 @@ const ActivityOfData = ({
               className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-rose-600 hover:bg-rose-50"
             >
               <Trash2 className="h-4 w-4" />
-              Soft Delete User
+              Delete User
             </button>
           </>
         )}
@@ -275,7 +280,7 @@ const ActivityOfData = ({
               className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-rose-600 hover:bg-rose-50"
             >
               <Trash2 className="h-4 w-4" />
-              Soft Delete User
+              Delete User
             </button>
           </>
         )}

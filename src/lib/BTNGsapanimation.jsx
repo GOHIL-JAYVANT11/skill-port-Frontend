@@ -190,4 +190,199 @@ export const useCommissionAnalyticsAnimation = (containerRef) => {
   }, [containerRef]);
 };
 
+export const useDashboardHeaderAnimation = (
+  headerRef,
+  refreshButtonRef,
+  refreshToken,
+) => {
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      if (headerRef?.current) {
+        gsap.fromTo(
+          headerRef.current,
+          { opacity: 0, y: -20 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.5,
+            ease: "power3.out",
+          },
+        );
+      }
+
+      if (refreshButtonRef?.current) {
+        gsap.fromTo(
+          refreshButtonRef.current,
+          { opacity: 0, y: -10, scale: 0.95 },
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.5,
+            ease: "back.out(1.7)",
+            delay: 0.1,
+          },
+        );
+      }
+    });
+
+    return () => ctx.revert();
+  }, [headerRef, refreshButtonRef, refreshToken]);
+};
+
+export const useDashboardStatsAnimation = (cardsContainerRef, refreshToken) => {
+  useEffect(() => {
+    if (!cardsContainerRef?.current) {
+      return;
+    }
+
+    const ctx = gsap.context(() => {
+      const cards = cardsContainerRef.current.children;
+      if (!cards || !cards.length) {
+        return;
+      }
+
+      gsap.from(cards, {
+        opacity: 0,
+        y: 20,
+        scale: 0.95,
+        duration: 0.4,
+        ease: "power3.out",
+        stagger: 0.05,
+      });
+    }, cardsContainerRef);
+
+    return () => ctx.revert();
+  }, [cardsContainerRef, refreshToken]);
+};
+
+export const useDashboardChartCardAnimation = (cardRef, refreshToken) => {
+  useEffect(() => {
+    if (!cardRef?.current) {
+      return;
+    }
+
+    const ctx = gsap.context(() => {
+      gsap.from(cardRef.current, {
+        opacity: 0,
+        y: 30,
+        duration: 0.6,
+        ease: "power3.out",
+      });
+    }, cardRef);
+
+    return () => ctx.revert();
+  }, [cardRef, refreshToken]);
+};
+
+export const useDashboardMeetingsAnimation = (cardRef, refreshToken) => {
+  useEffect(() => {
+    if (!cardRef?.current) {
+      return;
+    }
+
+    const ctx = gsap.context(() => {
+      gsap.from(cardRef.current, {
+        opacity: 0,
+        y: 40,
+        duration: 0.6,
+        ease: "power3.out",
+      });
+    }, cardRef);
+
+    return () => ctx.revert();
+  }, [cardRef, refreshToken]);
+};
+
+export const useDashboardStaggeredListAnimation = (listRef, refreshToken) => {
+  useEffect(() => {
+    if (!listRef?.current) {
+      return;
+    }
+
+    const ctx = gsap.context(() => {
+      const items = listRef.current.querySelectorAll("[data-index]");
+      if (!items.length) {
+        return;
+      }
+
+      gsap.from(items, {
+        opacity: 0,
+        x: -16,
+        duration: 0.5,
+        ease: "power3.out",
+        stagger: 0.08,
+      });
+    }, listRef);
+
+    return () => ctx.revert();
+  }, [listRef, refreshToken]);
+};
+
+export const useDashboardQuickActionsAnimation = (cardRef, refreshToken) => {
+  useEffect(() => {
+    if (!cardRef?.current) {
+      return;
+    }
+
+    const ctx = gsap.context(() => {
+      gsap.from(cardRef.current, {
+        opacity: 0,
+        x: 40,
+        duration: 0.6,
+        ease: "power3.out",
+      });
+    }, cardRef);
+
+    return () => ctx.revert();
+  }, [cardRef, refreshToken]);
+};
+
+export const useLayoutBackgroundAnimation = (containerRef) => {
+  useEffect(() => {
+    if (!containerRef?.current) {
+      return;
+    }
+
+    const ctx = gsap.context(() => {
+      gsap.from(containerRef.current, {
+        opacity: 0,
+        y: 16,
+        duration: 0.6,
+        ease: "power3.out",
+      });
+
+      gsap.to(containerRef.current, {
+        backgroundPosition: "100% 0%",
+        duration: 24,
+        ease: "linear",
+        repeat: -1,
+        yoyo: true,
+      });
+
+      const badges = containerRef.current.querySelectorAll("[data-floating-badge]");
+      if (badges.length) {
+        badges.forEach((badge, index) => {
+          gsap.fromTo(
+            badge,
+            { opacity: 0.12, y: -8, x: 0 },
+            {
+              opacity: 0.3,
+              y: 8,
+              x: index % 2 === 0 ? 10 : -10,
+              duration: 8 + index * 1.5,
+              ease: "sine.inOut",
+              repeat: -1,
+              yoyo: true,
+              delay: 0.4 * index,
+            },
+          );
+        });
+      }
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, [containerRef]);
+};
+
 export default useHeaderExportButtonAnimation;

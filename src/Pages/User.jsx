@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Download, Users, Briefcase, UserCheck, Code2, Search, Filter } from 'lucide-react';
 import ExportData from '../Components/User/ExportData';
 import UserFilter from '../Components/User/UserFilter';
@@ -39,233 +39,113 @@ export const User = () => {
   useUserStatsCardsAnimation(statsCardsRef);
   useUserFiltersAnimation(filtersRef);
 
-  const users = [
-    {
-      id: 'u1',
-      name: 'Jane Cooper',
-      email: 'jane.cooper@example.com',
-      phone: '+1 555-0100',
-      location: 'New York, USA',
-      roles: 'Recruiter',
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const mapApiUser = (u) => {
+    const rolePrimary = Array.isArray(u?.Role) && u.Role.length ? u.Role[0] : 'Job Seeker';
+    const roleSecondary = Array.isArray(u?.Role) && u.Role.length > 1 ? u.Role[1] : undefined;
+    return {
+      id: u?._id || '',
+      name: u?.Fullname || 'Unknown',
+      email: u?.email || '',
+      phone: u?.number || '',
+      location: u?.location || '',
+      roles: rolePrimary,
+      secondaryRole: roleSecondary,
       accountStatus: 'Active',
-      verificationStatus: 'Rejected',
-      joinedDate: '2024-01-15',
-      lastActive: '2026-02-18',
-      skills: ['Sourcing', 'Screening'],
-      reportsCount: 1,
-      warningsCount: 0,
-    },
-    {
-      id: 'u1',
-      name: 'Jane Cooper',
-      email: 'jane.cooper@example.com',
-      phone: '+1 555-0100',
-      location: 'New York, USA',
-      roles: 'Recruiter',
-      accountStatus: 'Active',
-      verificationStatus: 'Pending',
-      joinedDate: '2024-01-15',
-      lastActive: '2026-02-18',
-      skills: ['Sourcing', 'Screening'],
+      verificationStatus: u?.isGoogleUser ? 'Verified' : 'Pending',
+      joinedDate: u?.createdAt || '',
+      lastActive: u?.updatedAt || '',
+      skills: Array.isArray(u?.skill) ? u.skill : [],
       reportsCount: 0,
       warningsCount: 0,
-    },
-    {
-      id: 'u1',
-      name: 'Jane Cooper',
-      email: 'jane.cooper@example.com',
-      phone: '+1 555-0100',
-      location: 'New York, USA',
-      roles: 'Recruiter',
-      accountStatus: 'Pending',
-      verificationStatus: 'Pending',
-      joinedDate: '2024-01-15',
-      lastActive: '2026-02-18',
-      skills: ['Sourcing', 'Screening'],
-      reportsCount: 1,
-      warningsCount: 0,
-    },
-    {
-      id: 'u1',
-      name: 'Jane Cooper',
-      email: 'jane.cooper@example.com',
-      phone: '+1 555-0100',
-      location: 'New York, USA',
-      roles: 'Recruiter',
-      accountStatus: 'Blocked',
-      verificationStatus: 'Verified',
-      joinedDate: '2024-01-15',
-      lastActive: '2026-02-18',
-      skills: ['Sourcing', 'Screening'],
-      reportsCount: 1,
-      warningsCount: 0,
-    },
-    {
-      id: 'u1',
-      name: 'Jane Cooper',
-      email: 'jane.cooper@example.com',
-      phone: '+1 555-0100',
-      location: 'New York, USA',
-      roles: 'Recruiter',
-      accountStatus: 'Active',
-      verificationStatus: 'Verified',
-      joinedDate: '2024-01-15',
-      lastActive: '2026-02-18',
-      skills: ['Sourcing', 'Screening'],
-      reportsCount: 1,
-      warningsCount: 0,
-    },
-    {
-      id: 'u1',
-      name: 'Jane Cooper',
-      email: 'jane.cooper@example.com',
-      phone: '+1 555-0100',
-      location: 'New York, USA',
-      roles: 'Recruiter',
-      accountStatus: 'Active',
-      verificationStatus: 'Verified',
-      joinedDate: '2024-01-15',
-      lastActive: '2026-02-18',
-      skills: ['Sourcing', 'Screening'],
-      reportsCount: 1,
-      warningsCount: 0,
-    },
-    {
-      id: 'u1',
-      name: 'Jane Cooper',
-      email: 'jane.cooper@example.com',
-      phone: '+1 555-0100',
-      location: 'New York, USA',
-      roles: 'Recruiter',
-      accountStatus: 'Active',
-      verificationStatus: 'Verified',
-      joinedDate: '2024-01-15',
-      lastActive: '2026-02-18',
-      skills: ['Sourcing', 'Screening'],
-      reportsCount: 1,
-      warningsCount: 0,
-    },
-    {
-      id: 'u1',
-      name: 'Jane Cooper',
-      email: 'jane.cooper@example.com',
-      phone: '+1 555-0100',
-      location: 'New York, USA',
-      roles: 'Recruiter',
-      accountStatus: 'Active',
-      verificationStatus: 'Verified',
-      joinedDate: '2024-01-15',
-      lastActive: '2026-02-18',
-      skills: ['Sourcing', 'Screening'],
-      reportsCount: 1,
-      warningsCount: 0,
-    },
-    {
-      id: 'u1',
-      name: 'Jane Cooper',
-      email: 'jane.cooper@example.com',
-      phone: '+1 555-0100',
-      location: 'New York, USA',
-      roles: 'Recruiter',
-      accountStatus: 'Active',
-      verificationStatus: 'Verified',
-      joinedDate: '2024-01-15',
-      lastActive: '2026-02-18',
-      skills: ['Sourcing', 'Screening'],
-      reportsCount: 1,
-      warningsCount: 0,
-    },
-    {
-      id: 'u1',
-      name: 'Jane Cooper',
-      email: 'jane.cooper@example.com',
-      phone: '+1 555-0100',
-      location: 'New York, USA',
-      roles: 'Recruiter',
-      accountStatus: 'Active',
-      verificationStatus: 'Verified',
-      joinedDate: '2024-01-15',
-      lastActive: '2026-02-18',
-      skills: ['Sourcing', 'Screening'],
-      reportsCount: 1,
-      warningsCount: 0,
-    },
-    {
-      id: 'u1',
-      name: 'Jane Cooper',
-      email: 'jane.cooper@example.com',
-      phone: '+1 555-0100',
-      location: 'New York, USA',
-      roles: 'Recruiter',
-      accountStatus: 'Active',
-      verificationStatus: 'Verified',
-      joinedDate: '2024-01-15',
-      lastActive: '2026-02-18',
-      skills: ['Sourcing', 'Screening'],
-      reportsCount: 1,
-      warningsCount: 0,
-    },
-    {
-      id: 'u1',
-      name: 'Jane Cooper',
-      email: 'jane.cooper@example.com',
-      phone: '+1 555-0100',
-      location: 'New York, USA',
-      roles: 'Recruiter',
-      accountStatus: 'Active',
-      verificationStatus: 'Verified',
-      joinedDate: '2024-01-15',
-      lastActive: '2026-02-18',
-      skills: ['Sourcing', 'Screening'],
-      reportsCount: 1,
-      warningsCount: 0,
-    },
-    {
-      id: 'u1',
-      name: 'Jane Cooper',
-      email: 'jane.cooper@example.com',
-      phone: '+1 555-0100',
-      location: 'New York, USA',
-      roles: 'Recruiter',
-      accountStatus: 'Active',
-      verificationStatus: 'Verified',
-      joinedDate: '2024-01-15',
-      lastActive: '2026-02-18',
-      skills: ['Sourcing', 'Screening'],
-      reportsCount: 1,
-      warningsCount: 0,
-    },
-    {
-      id: 'u2',
-      name: 'Marvin McKinney',
-      email: 'marvin.mckinney@example.com',
-      phone: '+1 555-0101',
-      location: 'San Francisco, USA',
-      roles: 'Freelancer',
-      accountStatus: 'Active',
-      verificationStatus: 'Pending',
-      joinedDate: '2023-11-02',
-      lastActive: '2026-02-19',
-      skills: ['React', 'Node.js'],
-      reportsCount: 0,
-      warningsCount: 0,
-    },
-    {
-      id: 'u3',
-      name: 'Courtney Henry',
-      email: 'courtney.henry@example.com',
-      phone: '+1 555-0102',
-      location: 'London, UK',
-      roles: 'Job Seeker',
-      accountStatus: 'Suspended',
-      verificationStatus: 'Verified',
-      joinedDate: '2022-08-09',
-      lastActive: '2026-01-30',
-      skills: ['Design', 'Figma'],
-      reportsCount: 3,
-      warningsCount: 1,
-    },
-  ];
+    };
+  };
+
+  const mapApiRecruiter = (r) => ({
+    id: r?._id || '',
+    name: r?.Fullname || 'Unknown',
+    email: r?.email || '',
+    phone: r?.number || '',
+    location: '',
+    roles: 'Recruiter',
+    secondaryRole: undefined,
+    accountStatus: 'Active',
+    verificationStatus: r?.isVerified ? 'Verified' : 'Pending',
+    joinedDate: r?.createdAt || '',
+    lastActive: r?.updatedAt || '',
+    skills: [],
+    reportsCount: 0,
+    warningsCount: 0,
+  });
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const getCookie = (name) => {
+      try {
+        return document.cookie
+          .split('; ')
+          .find((row) => row.startsWith(`${name}=`))
+          ?.split('=')[1];
+      } catch {
+        return '';
+      }
+    };
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const base = import.meta.env.VITE_API_URL || '';
+        const url = `${base}/gknbvg/SkillPort-admin/ertqyuiok/get-all-users`;
+        const token =
+          getCookie('AdminToken') ||
+          import.meta.env.VITE_ADMIN_TOKEN ||
+          (typeof window !== 'undefined' && window.ADMIN_TOKEN) ||
+          (typeof window !== 'undefined' &&
+            window.localStorage &&
+            window.localStorage.getItem('admin_token')) ||
+          '';
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const json = await res.json();
+        const userArr = Array.isArray(json?.data?.users) ? json.data.users : [];
+        const recArr = Array.isArray(json?.data?.recruiters) ? json.data.recruiters : [];
+        const mapped = [...userArr.map(mapApiUser), ...recArr.map(mapApiRecruiter)];
+        setUsers(mapped);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setError('Failed to load users');
+          setUsers([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+            setLoading(false);
+        }
+      }
+    };
+
+    const timer = setTimeout(() => {
+        load();
+    }, 300);
+
+    return () => {
+        clearTimeout(timer);
+        controller.abort();
+    };
+  }, []);
+
+
 
   const totalUsers = users.length;
   const jobSeekersCount = users.filter((user) => user.roles === 'Job Seeker').length;
@@ -380,6 +260,8 @@ export const User = () => {
             <span>Export Users</span>
           </button>
         </header>
+        {loading && <div className="mt-4 text-sm text-slate-500">Loading users...</div>}
+        {error && <div className="mt-4 text-sm text-rose-600">{error}</div>}
 
         <div className="mt-8">
           <div

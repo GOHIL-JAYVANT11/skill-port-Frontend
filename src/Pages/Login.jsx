@@ -14,6 +14,7 @@ const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+    const [pendingToken, setPendingToken] = useState("");
     const [showPassword, setShowPassword] = useState(false); ``
     const navigate = useNavigate();
     const BASE_URL = import.meta.env.VITE_API_URL;
@@ -65,6 +66,16 @@ const Login = () => {
         }
     }, [step]);
 
+    const setCookie = (name, value, days = 7) => {
+        try {
+            const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+            const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+            document.cookie = `${name}=${encodeURIComponent(value)}; Path=/; SameSite=Lax; Expires=${expires}${secure}`;
+        } catch (err) {
+            console.error('Set cookie failed', err);
+        }
+    };
+
     const handleCredentialsSubmit = async (e) => {
         e.preventDefault();
 
@@ -82,7 +93,11 @@ const Login = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log('Login success:', data);
+                setPendingToken(data?.token || "");
+                if (data?.token) {
+                    // Optionally set cookie immediately; OTP will confirm and we keep it.
+                    setCookie('AdminToken', data.token, 7);
+                }
                 setStep("otp");
             } else {
                 toast.error('Login failed. Please check your credentials.');
@@ -147,7 +162,10 @@ const Login = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log("OTP Verified Success", data);
+                const finalToken = data?.token || pendingToken;
+                if (finalToken) {
+                    setCookie('AdminToken', finalToken, 7);
+                }
                 navigate("/dashboard");
             } else {
                 toast.error("Invalid OTP, please try again");

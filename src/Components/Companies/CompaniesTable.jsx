@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import {
   MoreHorizontal,
   Eye,
@@ -53,21 +54,43 @@ const CompaniesTable = ({
   onViewTimeline,
 }) => {
   const [activeMenuRowIndex, setActiveMenuRowIndex] = React.useState(null);
+  const [activeMenuCompany, setActiveMenuCompany] = React.useState(null);
+  const [menuPosition, setMenuPosition] = React.useState({ top: 0, left: 0 });
 
-  const handleRowMenuToggle = (index) => {
-    setActiveMenuRowIndex((current) => (current === index ? null : index));
+  const handleRowMenuToggle = (index, e, company) => {
+    if (activeMenuRowIndex === index) {
+      setActiveMenuRowIndex(null);
+      setActiveMenuCompany(null);
+      return;
+    }
+    const r = e.currentTarget.getBoundingClientRect();
+    const width = 288;
+    const gap = 8;
+    let left = Math.min(window.innerWidth - width - gap, Math.max(gap, r.right - width));
+    let top = r.bottom + gap;
+    const approxHeight = 360;
+    if (top + approxHeight > window.innerHeight) {
+      top = Math.max(gap, r.top - approxHeight - gap);
+    }
+    setMenuPosition({ top, left });
+    setActiveMenuCompany(company);
+    setActiveMenuRowIndex(index);
   };
+
+  React.useEffect(() => {
+    if (activeMenuRowIndex === null) return;
+    const close = () => setActiveMenuRowIndex(null);
+    window.addEventListener('resize', close);
+    window.addEventListener('scroll', close, true);
+    return () => {
+      window.removeEventListener('resize', close);
+      window.removeEventListener('scroll', close, true);
+    };
+  }, [activeMenuRowIndex]);
 
   const isAnySelected = selectedCompanyIds.length > 0;
   const allSelected =
     companies.length > 0 && selectedCompanyIds.length === companies.length;
-
-  const getMenuPlacementClass = (index) => {
-    const isNearBottom = index >= companies.length - 2;
-    return isNearBottom
-      ? 'bottom-full mb-2 right-0'
-      : 'top-full mt-2 right-0';
-  };
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white">
@@ -210,240 +233,10 @@ const CompaniesTable = ({
                     <button
                       type="button"
                       className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                      onClick={() => handleRowMenuToggle(index)}
+                      onClick={(e) => handleRowMenuToggle(index, e, company)}
                     >
                       <MoreHorizontal className="h-4 w-4" />
                     </button>
-                    {activeMenuRowIndex === index && (
-                      <div
-                        className={`absolute z-20 w-72 rounded-2xl border border-slate-100 bg-white p-2 text-left shadow-xl ${getMenuPlacementClass(
-                          index,
-                        )}`}
-                      >
-                        <div className="px-3 pb-1 pt-1">
-                          <div className="text-xs font-semibold text-slate-500">
-                            Company Actions
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-slate-800 hover:bg-slate-50"
-                          onClick={() => {
-                            if (onOpenDetails) {
-                              onOpenDetails(company);
-                            }
-                            setActiveMenuRowIndex(null);
-                          }}
-                        >
-                          <Eye className="h-4 w-4 text-slate-600" />
-                          <span className="text-xs font-medium">
-                            View Company Details
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-slate-800 hover:bg-slate-50"
-                          onClick={() => {
-                            if (onViewTimeline) {
-                              onViewTimeline(company);
-                            }
-                            setActiveMenuRowIndex(null);
-                          }}
-                        >
-                          <Activity className="h-4 w-4 text-slate-600" />
-                          <span className="text-xs font-medium">
-                            View Activity Timeline
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-slate-800 hover:bg-slate-50"
-                          onClick={() => {
-                            if (onAddAdminNote) {
-                              onAddAdminNote(company);
-                            }
-                            setActiveMenuRowIndex(null);
-                          }}
-                        >
-                          <FileText className="h-4 w-4 text-slate-600" />
-                          <span className="text-xs font-medium">
-                            Add Internal Admin Note
-                          </span>
-                        </button>
-
-                        <div className="my-1 h-px bg-slate-100" />
-
-                        {isVerified && isActiveAccount && (
-                          <button
-                            type="button"
-                            className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-amber-700 hover:bg-amber-50"
-                            onClick={() => {
-                              if (onRejectVerification) {
-                                onRejectVerification(company);
-                              }
-                              setActiveMenuRowIndex(null);
-                            }}
-                          >
-                            <ShieldX className="h-4 w-4 text-amber-500" />
-                            <span className="text-xs font-medium">
-                              Revoke Verification
-                            </span>
-                          </button>
-                        )}
-
-                        {!isVerified && (
-                          <button
-                            type="button"
-                            className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-emerald-700 hover:bg-emerald-50"
-                            onClick={() => {
-                              if (onVerify) {
-                                onVerify(company);
-                              }
-                              setActiveMenuRowIndex(null);
-                            }}
-                          >
-                            <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                            <span className="text-xs font-medium">
-                              Manage Verification
-                            </span>
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-slate-800 hover:bg-slate-50"
-                          onClick={() => {
-                            if (onViewJobs) {
-                              onViewJobs(company);
-                            }
-                            setActiveMenuRowIndex(null);
-                          }}
-                        >
-                          <Briefcase className="h-4 w-4 text-slate-600" />
-                          <span className="text-xs font-medium">
-                            View Posted Jobs
-                          </span>
-                        </button>
-                        <button
-                          type="button"
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-slate-800 hover:bg-slate-50"
-                          onClick={() => {
-                            if (onViewProjects) {
-                              onViewProjects(company);
-                            }
-                            setActiveMenuRowIndex(null);
-                          }}
-                        >
-                          <FileText className="h-4 w-4 text-slate-600" />
-                          <span className="text-xs font-medium">
-                            View Freelance Projects
-                          </span>
-                        </button>
-                        <button
-                          type="button"
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-slate-800 hover:bg-slate-50"
-                          onClick={() => {
-                            if (onViewPayments) {
-                              onViewPayments(company);
-                            }
-                            setActiveMenuRowIndex(null);
-                          }}
-                        >
-                          <FileText className="h-4 w-4 text-slate-600" />
-                          <span className="text-xs font-medium">
-                            View Payments & Commission
-                          </span>
-                        </button>
-                        <button
-                          type="button"
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-amber-700 hover:bg-amber-50"
-                          onClick={() => {
-                            if (onViewDisputes) {
-                              onViewDisputes(company);
-                            }
-                            setActiveMenuRowIndex(null);
-                          }}
-                        >
-                          <AlertTriangle className="h-4 w-4 text-amber-500" />
-                          <span className="text-xs font-medium">
-                            View Disputes & Reports
-                          </span>
-                        </button>
-
-                        <div className="my-1 h-px bg-slate-100" />
-
-                        {isSuspendedAccount ? (
-                          <>
-                            <button
-                              type="button"
-                              className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-emerald-700 hover:bg-emerald-50"
-                              onClick={() => {
-                                if (onReactivate) {
-                                  onReactivate(company);
-                                }
-                                setActiveMenuRowIndex(null);
-                              }}
-                            >
-                              <UserX className="h-4 w-4 text-emerald-600" />
-                              <span className="text-xs font-medium">
-                                Reactivate From Suspension
-                              </span>
-                            </button>
-                            <button
-                              type="button"
-                              className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-rose-700 hover:bg-rose-50"
-                              onClick={() => {
-                                if (onBlacklist) {
-                                  onBlacklist(company);
-                                }
-                                setActiveMenuRowIndex(null);
-                              }}
-                            >
-                              <Ban className="h-4 w-4 text-rose-600" />
-                              <span className="text-xs font-medium">
-                                Blacklist Company
-                              </span>
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-amber-700 hover:bg-amber-50"
-                              onClick={() => {
-                                if (onSuspend) {
-                                  onSuspend(company);
-                                }
-                                setActiveMenuRowIndex(null);
-                              }}
-                            >
-                              <UserX className="h-4 w-4 text-amber-500" />
-                              <span className="text-xs font-medium">
-                                Suspend Company
-                              </span>
-                            </button>
-                            <button
-                              type="button"
-                              className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-rose-700 hover:bg-rose-50"
-                              onClick={() => {
-                                if (onBlacklist) {
-                                  onBlacklist(company);
-                                }
-                                setActiveMenuRowIndex(null);
-                              }}
-                            >
-                              <Ban className="h-4 w-4 text-rose-600" />
-                              <span className="text-xs font-medium">
-                                Blacklist Company
-                              </span>
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    )}
                   </td>
                 </tr>
               );
@@ -458,6 +251,211 @@ const CompaniesTable = ({
           </div>
         )}
       </div>
+
+      {activeMenuRowIndex !== null &&
+        activeMenuCompany &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[200]"
+            onClick={() => setActiveMenuRowIndex(null)}
+          >
+            <div
+              className="absolute w-72 rounded-2xl border border-slate-100 bg-white p-2 text-left shadow-xl"
+              style={{ top: menuPosition.top, left: menuPosition.left }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-3 pb-1 pt-1">
+                <div className="text-xs font-semibold text-slate-500">
+                  Company Actions
+                </div>
+              </div>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-slate-800 hover:bg-slate-50"
+                onClick={() => {
+                  if (onOpenDetails) {
+                    onOpenDetails(activeMenuCompany);
+                  }
+                  setActiveMenuRowIndex(null);
+                }}
+              >
+                <Eye className="h-4 w-4 text-slate-600" />
+                <span className="text-xs font-medium">View Company Details</span>
+              </button>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-slate-800 hover:bg-slate-50"
+                onClick={() => {
+                  if (onViewTimeline) {
+                    onViewTimeline(activeMenuCompany);
+                  }
+                  setActiveMenuRowIndex(null);
+                }}
+              >
+                <Activity className="h-4 w-4 text-slate-600" />
+                <span className="text-xs font-medium">View Activity Timeline</span>
+              </button>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-slate-800 hover:bg-slate-50"
+                onClick={() => {
+                  if (onAddAdminNote) {
+                    onAddAdminNote(activeMenuCompany);
+                  }
+                  setActiveMenuRowIndex(null);
+                }}
+              >
+                <FileText className="h-4 w-4 text-slate-600" />
+                <span className="text-xs font-medium">Add Internal Admin Note</span>
+              </button>
+              <div className="my-1 h-px bg-slate-100" />
+              {activeMenuCompany?.verificationStatus === 'Verified' &&
+                activeMenuCompany?.accountStatus === 'Active' && (
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-amber-700 hover:bg-amber-50"
+                    onClick={() => {
+                      if (onRejectVerification) {
+                        onRejectVerification(activeMenuCompany);
+                      }
+                      setActiveMenuRowIndex(null);
+                    }}
+                  >
+                    <ShieldX className="h-4 w-4 text-amber-500" />
+                    <span className="text-xs font-medium">Revoke Verification</span>
+                  </button>
+                )}
+              {activeMenuCompany?.verificationStatus !== 'Verified' && (
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-emerald-700 hover:bg-emerald-50"
+                  onClick={() => {
+                    if (onVerify) {
+                      onVerify(activeMenuCompany);
+                    }
+                    setActiveMenuRowIndex(null);
+                  }}
+                >
+                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                  <span className="text-xs font-medium">Manage Verification</span>
+                </button>
+              )}
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-slate-800 hover:bg-slate-50"
+                onClick={() => {
+                  if (onViewJobs) {
+                    onViewJobs(activeMenuCompany);
+                  }
+                  setActiveMenuRowIndex(null);
+                }}
+              >
+                <Briefcase className="h-4 w-4 text-slate-600" />
+                <span className="text-xs font-medium">View Posted Jobs</span>
+              </button>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-slate-800 hover:bg-slate-50"
+                onClick={() => {
+                  if (onViewProjects) {
+                    onViewProjects(activeMenuCompany);
+                  }
+                  setActiveMenuRowIndex(null);
+                }}
+              >
+                <FileText className="h-4 w-4 text-slate-600" />
+                <span className="text-xs font-medium">View Freelance Projects</span>
+              </button>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-slate-800 hover:bg-slate-50"
+                onClick={() => {
+                  if (onViewPayments) {
+                    onViewPayments(activeMenuCompany);
+                  }
+                  setActiveMenuRowIndex(null);
+                }}
+              >
+                <FileText className="h-4 w-4 text-slate-600" />
+                <span className="text-xs font-medium">View Payments & Commission</span>
+              </button>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-amber-700 hover:bg-amber-50"
+                onClick={() => {
+                  if (onViewDisputes) {
+                    onViewDisputes(activeMenuCompany);
+                  }
+                  setActiveMenuRowIndex(null);
+                }}
+              >
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                <span className="text-xs font-medium">View Disputes & Reports</span>
+              </button>
+              <div className="my-1 h-px bg-slate-100" />
+              {activeMenuCompany?.accountStatus === 'Suspended' ? (
+                <>
+                  <button
+                    type="button"
+                    className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-emerald-700 hover:bg-emerald-50"
+                    onClick={() => {
+                      if (onReactivate) {
+                        onReactivate(activeMenuCompany);
+                      }
+                      setActiveMenuRowIndex(null);
+                    }}
+                  >
+                    <UserX className="h-4 w-4 text-emerald-600" />
+                    <span className="text-xs font-medium">Reactivate From Suspension</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-rose-700 hover:bg-rose-50"
+                    onClick={() => {
+                      if (onBlacklist) {
+                        onBlacklist(activeMenuCompany);
+                      }
+                      setActiveMenuRowIndex(null);
+                    }}
+                  >
+                    <Ban className="h-4 w-4 text-rose-600" />
+                    <span className="text-xs font-medium">Blacklist Company</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-amber-700 hover:bg-amber-50"
+                    onClick={() => {
+                      if (onSuspend) {
+                        onSuspend(activeMenuCompany);
+                      }
+                      setActiveMenuRowIndex(null);
+                    }}
+                  >
+                    <UserX className="h-4 w-4 text-amber-500" />
+                    <span className="text-xs font-medium">Suspend Company</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-rose-700 hover:bg-rose-50"
+                    onClick={() => {
+                      if (onBlacklist) {
+                        onBlacklist(activeMenuCompany);
+                      }
+                      setActiveMenuRowIndex(null);
+                    }}
+                  >
+                    <Ban className="h-4 w-4 text-rose-600" />
+                    <span className="text-xs font-medium">Blacklist Company</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
 
       <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3 text-[11px] text-slate-500">
         <div>

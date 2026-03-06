@@ -222,7 +222,7 @@ export const SoftDeleteUserModal = ({ isOpen, onClose, user }) => {
             <div className="flex items-center gap-2">
               <Trash2 className="h-5 w-5 text-rose-500" />
               <h2 className="text-lg font-semibold text-slate-900">
-                Soft Delete User
+                Delete User
               </h2>
             </div>
             <p className="mt-1 text-xs text-slate-500">
@@ -292,7 +292,7 @@ export const SoftDeleteUserModal = ({ isOpen, onClose, user }) => {
               }`}
             >
               <Trash2 className="h-3.5 w-3.5" />
-              Soft Delete User
+              Delete User
             </button>
           </div>
         </div>

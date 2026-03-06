@@ -162,17 +162,17 @@ export const CompanyDetailsModal = ({ isOpen, onClose, company }) => {
               <div className="mt-8 grid gap-4 md:grid-cols-4">
                 {statBox(
                   'Total Jobs',
-                  company.stats.totalJobs.toLocaleString(),
+                  (company.stats?.totalJobs || 0).toLocaleString(),
                   'soft',
                 )}
                 {statBox(
                   'Freelance Projects',
-                  company.stats.totalProjects.toLocaleString(),
+                  (company.stats?.totalProjects || 0).toLocaleString(),
                   'soft',
                 )}
                 {statBox(
                   'Active Hires',
-                  company.stats.activeHires.toLocaleString(),
+                  (company.stats?.activeHires || 0).toLocaleString(),
                   'soft',
                 )}
                 {statBox(
@@ -339,17 +339,17 @@ export const CompanyDetailsModal = ({ isOpen, onClose, company }) => {
               <div className="grid gap-4 md:grid-cols-4">
                 {statBox(
                   'Total Commission',
-                  `₹ ${company.financials.totalCommission.toLocaleString()}`,
+                  `₹ ${(company.financials?.totalCommission || 0).toLocaleString()}`,
                   'green',
                 )}
                 {statBox(
                   'Total Payments',
-                  `₹ ${company.financials.totalPaid.toLocaleString()}`,
+                  `₹ ${(company.financials?.totalPaid || 0).toLocaleString()}`,
                   'soft',
                 )}
                 {statBox(
                   'Pending Commission',
-                  `₹ ${company.financials.pendingCommission.toLocaleString()}`,
+                  `₹ ${(company.financials?.pendingCommission || 0).toLocaleString()}`,
                   'amber',
                 )}
                 <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3 text-xs text-slate-700">
@@ -363,7 +363,7 @@ export const CompanyDetailsModal = ({ isOpen, onClose, company }) => {
                       </div>
                       <div className="text-sm font-semibold text-slate-900">
                         ₹
-                        {company.financials.escrowIn.toLocaleString()}
+                        {(company.financials?.escrowIn || 0).toLocaleString()}
                       </div>
                     </div>
                     <div className="space-y-1 text-right">
@@ -372,7 +372,7 @@ export const CompanyDetailsModal = ({ isOpen, onClose, company }) => {
                       </div>
                       <div className="text-sm font-semibold text-slate-900">
                         ₹
-                        {company.financials.escrowOut.toLocaleString()}
+                        {(company.financials?.escrowOut || 0).toLocaleString()}
                       </div>
                     </div>
                   </div>
@@ -386,7 +386,7 @@ export const CompanyDetailsModal = ({ isOpen, onClose, company }) => {
               <div className="grid gap-4 md:grid-cols-4">
                 {statBox(
                   'Reports',
-                  company.risk.reports.toLocaleString(),
+                  (company.risk?.reports || 0).toLocaleString(),
                   'soft',
                 )}
                 <div className="rounded-2xl border border-slate-100 bg-white px-4 py-3">
@@ -394,7 +394,7 @@ export const CompanyDetailsModal = ({ isOpen, onClose, company }) => {
                     Disputes
                   </div>
                   <div className="mt-1 text-sm font-semibold text-slate-900">
-                    {company.risk.disputes.toLocaleString()}
+                    {(company.risk?.disputes || 0).toLocaleString()}
                   </div>
                   <div className="mt-1 text-[11px] text-slate-500">
                     Frequency: {company.risk.frequency || 'LOW'}
@@ -402,7 +402,7 @@ export const CompanyDetailsModal = ({ isOpen, onClose, company }) => {
                 </div>
                 {statBox(
                   'Warnings',
-                  company.risk.warnings.toLocaleString(),
+                  (company.risk?.warnings || 0).toLocaleString(),
                   'soft',
                 )}
                 {statBox('Last Dispute', company.risk.lastDispute || '—', 'soft')}

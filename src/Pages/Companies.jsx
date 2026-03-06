@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Plus,
   Search,
@@ -27,6 +27,27 @@ import {
   useUserFiltersAnimation,
 } from '../lib/BTNGsapanimation';
 import { toast } from 'sonner';
+
+let __recruitersCache = null;
+let __recruitersPromise = null;
+const loadRecruitersOnce = async (url, headers) => {
+  if (__recruitersCache) return __recruitersCache;
+  if (__recruitersPromise) return __recruitersPromise;
+  __recruitersPromise = fetch(url, { method: 'GET', headers })
+    .then((res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    })
+    .then((json) => {
+      const arr = Array.isArray(json?.data) ? json.data : [];
+      __recruitersCache = arr;
+      return __recruitersCache;
+    })
+    .finally(() => {
+      __recruitersPromise = null;
+    });
+  return __recruitersPromise;
+};
 
 const Companies = () => {
   const headerRef = useRef(null);
@@ -69,1134 +90,138 @@ const Companies = () => {
   const [isDisputesOpen, setIsDisputesOpen] = useState(false);
   const [isActivityOpen, setIsActivityOpen] = useState(false);
 
-  const companies = useMemo(
-    () => [
-      {
-        id: 'c1',
-        name: 'TechCorp Inc.',
-        logoUrl: '',
-        primaryRecruiter: 'Sarah Johnson',
-        primaryRole: 'Head of Talent',
-        email: 'sarah@techcorp.com',
-        phone: '+1 (555) 123-4567',
-        industry: 'Technology',
-        location: '500 Market Street, San Francisco, CA',
-        verificationStatus: 'Verified',
-        accountStatus: 'Active',
-        isVerified: true,
-        joinedDate: 'Sep 15, 2023',
-        website: 'https://techcorp.com',
-        description:
-          'Scaling digital products and cloud-native platforms for global enterprises.',
-        verificationReviewedAt: 'Sep 18, 2023',
-        riskTag: '',
-        stats: {
-          totalJobs: 42,
-          totalProjects: 8,
-          openJobs: 9,
-          closedJobs: 33,
-          activeProjects: 3,
-          completedProjects: 5,
-          activeHires: 12,
-          completedHires: 36,
-        },
-        jobsPosted: [
-          {
-            id: 'j1',
-            title: 'Senior Frontend Engineer',
-            type: 'Job',
-            date: 'Jan 5, 2024',
-            applicants: 45,
-            status: 'Approved',
-          },
-          {
-            id: 'j2',
-            title: 'Product Manager',
-            type: 'Job',
-            date: 'Jan 20, 2024',
-            applicants: 18,
-            status: 'Pending',
-          },
-        ],
-        projectsPosted: [
-          {
-            id: 'p1',
-            title: 'Design System Revamp',
-            status: 'Active',
-            budget: 'USD 85,000',
-            escrow: 'Escrow USD 60,000',
-          },
-        ],
-        verificationDocuments: [
-          {
-            id: 'vd1',
-            name: 'Business Registration',
-            uploadedOn: 'Sep 10, 2023',
-            status: 'Approved',
-          },
-          {
-            id: 'vd2',
-            name: 'Tax Certificate',
-            uploadedOn: 'Sep 11, 2023',
-            status: 'Approved',
-          },
-        ],
-        financials: {
-          totalCommission: 12850,
-          totalPaid: 420000,
-          pendingCommission: 2450,
-          escrowIn: 96000,
-          escrowOut: 72000,
-          activeEscrows: 3,
-          disputedEscrows: 1,
-          payoutTime: '5-7 working days',
-          lastPayout: 'Feb 10, 2026',
-        },
-        risk: {
-          reports: 2,
-          disputes: 1,
-          warnings: 1,
-          lastIncident: 'Minor payment delay reported Oct 2025',
-          lastDispute: 'Jan 18, 2024',
-          frequency: 'LOW',
-          level: 'Low',
-        },
-        adminNotes: [
-          {
-            id: 'n1',
-            author: 'Platform Admin',
-            note: 'Strong hiring volume with low dispute rate. Good payment behaviour.',
-            createdAt: 'Oct 10, 2024',
-          },
-        ],
-        paymentsHistory: [
-          {
-            id: 'p1',
-            title: 'Commission payout – Full-time hire',
-            subtitle: '₹32,000 • Backend Engineer • Jan 2026',
-            meta: 'Processed • 06 Feb 2026',
-          },
-          {
-            id: 'p2',
-            title: 'Commission payout – Freelance project',
-            subtitle: '₹18,000 • React dashboard revamp • Dec 2025',
-            meta: 'Processed • 08 Jan 2026',
-          },
-        ],
-        disputesHistory: [
-          {
-            id: 'd1',
-            title: 'Payment dispute – Short-term contract',
-            subtitle: 'Raised by freelancer • Resolved in favour of company',
-            meta: 'Closed • Nov 2025',
-          },
-        ],
-        activityTimeline: [
-          {
-            id: 'a1',
-            title: 'Company verified by admin',
-            subtitle: 'Documents reviewed and approved',
-            meta: '12 Feb 2025',
-          },
-          {
-            id: 'a2',
-            title: 'Posted Senior React Developer role',
-            subtitle: 'Full-time • Bengaluru or Remote',
-            meta: '04 Jan 2026',
-          },
-        ],
-      },
-      {
-        id: 'c1',
-        name: 'Acme Technologies Pvt Ltd',
-        logoUrl: '',
-        primaryRecruiter: 'Rohit Sharma',
-        primaryRole: 'Senior Talent Partner',
-        email: 'rohit.sharma@acmetech.com',
-        phone: '+91 98765 43210',
-        industry: 'Technology',
-        location: 'Bengaluru, India',
-        verificationStatus: 'Verified',
-        accountStatus: 'Active',
-        isVerified: true,
-        joinedDate: 'Jan 08, 2025',
-        website: 'acmetech.com',
-        description:
-          'Product-led SaaS company focused on developer tooling and cloud-native infrastructure.',
-        verificationReviewedAt: 'Feb 12, 2025',
-        riskTag: 'Low risk',
-        stats: {
-          totalJobs: 48,
-          totalProjects: 12,
-          openJobs: 9,
-          closedJobs: 39,
-          activeProjects: 4,
-          completedProjects: 8,
-          activeHires: 16,
-        },
-        financials: {
-          totalCommission: 720000,
-          totalPaid: 5200000,
-          pendingCommission: 85000,
-          activeEscrows: 3,
-          disputedEscrows: 1,
-          payoutTime: '5-7 working days',
-          lastPayout: 'Feb 10, 2026',
-        },
-        risk: {
-          reports: 2,
-          disputes: 1,
-          warnings: 0,
-          lastIncident: 'Minor payment delay reported Oct 2025',
-          level: 'Low',
-        },
-        paymentsHistory: [
-          {
-            id: 'p1',
-            title: 'Commission payout – Full-time hire',
-            subtitle: '₹32,000 • Backend Engineer • Jan 2026',
-            meta: 'Processed • 06 Feb 2026',
-          },
-          {
-            id: 'p2',
-            title: 'Commission payout – Freelance project',
-            subtitle: '₹18,000 • React dashboard revamp • Dec 2025',
-            meta: 'Processed • 08 Jan 2026',
-          },
-        ],
-        disputesHistory: [
-          {
-            id: 'd1',
-            title: 'Payment dispute – Short-term contract',
-            subtitle: 'Raised by freelancer • Resolved in favour of company',
-            meta: 'Closed • Nov 2025',
-          },
-        ],
-        activityTimeline: [
-          {
-            id: 'a1',
-            title: 'Company verified by admin',
-            subtitle: 'Documents reviewed and approved',
-            meta: '12 Feb 2025',
-          },
-          {
-            id: 'a2',
-            title: 'Posted Senior React Developer role',
-            subtitle: 'Full-time • Bengaluru or Remote',
-            meta: '04 Jan 2026',
-          },
-        ],
-      },
-      {
-        id: 'c1',
-        name: 'Acme Technologies Pvt Ltd',
-        logoUrl: '',
-        primaryRecruiter: 'Rohit Sharma',
-        primaryRole: 'Senior Talent Partner',
-        email: 'rohit.sharma@acmetech.com',
-        phone: '+91 98765 43210',
-        industry: 'Technology',
-        location: 'Bengaluru, India',
-        verificationStatus: 'Verified',
-        accountStatus: 'Active',
-        isVerified: true,
-        joinedDate: 'Jan 08, 2025',
-        website: 'acmetech.com',
-        description:
-          'Product-led SaaS company focused on developer tooling and cloud-native infrastructure.',
-        verificationReviewedAt: 'Feb 12, 2025',
-        riskTag: 'Low risk',
-        stats: {
-          totalJobs: 48,
-          totalProjects: 12,
-          openJobs: 9,
-          closedJobs: 39,
-          activeProjects: 4,
-          completedProjects: 8,
-          activeHires: 16,
-        },
-        financials: {
-          totalCommission: 720000,
-          totalPaid: 5200000,
-          pendingCommission: 85000,
-          activeEscrows: 3,
-          disputedEscrows: 1,
-          payoutTime: '5-7 working days',
-          lastPayout: 'Feb 10, 2026',
-        },
-        risk: {
-          reports: 2,
-          disputes: 1,
-          warnings: 0,
-          lastIncident: 'Minor payment delay reported Oct 2025',
-          level: 'Low',
-        },
-        paymentsHistory: [
-          {
-            id: 'p1',
-            title: 'Commission payout – Full-time hire',
-            subtitle: '₹32,000 • Backend Engineer • Jan 2026',
-            meta: 'Processed • 06 Feb 2026',
-          },
-          {
-            id: 'p2',
-            title: 'Commission payout – Freelance project',
-            subtitle: '₹18,000 • React dashboard revamp • Dec 2025',
-            meta: 'Processed • 08 Jan 2026',
-          },
-        ],
-        disputesHistory: [
-          {
-            id: 'd1',
-            title: 'Payment dispute – Short-term contract',
-            subtitle: 'Raised by freelancer • Resolved in favour of company',
-            meta: 'Closed • Nov 2025',
-          },
-        ],
-        activityTimeline: [
-          {
-            id: 'a1',
-            title: 'Company verified by admin',
-            subtitle: 'Documents reviewed and approved',
-            meta: '12 Feb 2025',
-          },
-          {
-            id: 'a2',
-            title: 'Posted Senior React Developer role',
-            subtitle: 'Full-time • Bengaluru or Remote',
-            meta: '04 Jan 2026',
-          },
-        ],
-      },
-      {
-        id: 'c1',
-        name: 'Acme Technologies Pvt Ltd',
-        logoUrl: '',
-        primaryRecruiter: 'Rohit Sharma',
-        primaryRole: 'Senior Talent Partner',
-        email: 'rohit.sharma@acmetech.com',
-        phone: '+91 98765 43210',
-        industry: 'Technology',
-        location: 'Bengaluru, India',
-        verificationStatus: 'Verified',
-        accountStatus: 'Active',
-        isVerified: true,
-        joinedDate: 'Jan 08, 2025',
-        website: 'acmetech.com',
-        description:
-          'Product-led SaaS company focused on developer tooling and cloud-native infrastructure.',
-        verificationReviewedAt: 'Feb 12, 2025',
-        riskTag: 'Low risk',
-        stats: {
-          totalJobs: 48,
-          totalProjects: 12,
-          openJobs: 9,
-          closedJobs: 39,
-          activeProjects: 4,
-          completedProjects: 8,
-          activeHires: 16,
-        },
-        financials: {
-          totalCommission: 720000,
-          totalPaid: 5200000,
-          pendingCommission: 85000,
-          activeEscrows: 3,
-          disputedEscrows: 1,
-          payoutTime: '5-7 working days',
-          lastPayout: 'Feb 10, 2026',
-        },
-        risk: {
-          reports: 2,
-          disputes: 1,
-          warnings: 0,
-          lastIncident: 'Minor payment delay reported Oct 2025',
-          level: 'Low',
-        },
-        paymentsHistory: [
-          {
-            id: 'p1',
-            title: 'Commission payout – Full-time hire',
-            subtitle: '₹32,000 • Backend Engineer • Jan 2026',
-            meta: 'Processed • 06 Feb 2026',
-          },
-          {
-            id: 'p2',
-            title: 'Commission payout – Freelance project',
-            subtitle: '₹18,000 • React dashboard revamp • Dec 2025',
-            meta: 'Processed • 08 Jan 2026',
-          },
-        ],
-        disputesHistory: [
-          {
-            id: 'd1',
-            title: 'Payment dispute – Short-term contract',
-            subtitle: 'Raised by freelancer • Resolved in favour of company',
-            meta: 'Closed • Nov 2025',
-          },
-        ],
-        activityTimeline: [
-          {
-            id: 'a1',
-            title: 'Company verified by admin',
-            subtitle: 'Documents reviewed and approved',
-            meta: '12 Feb 2025',
-          },
-          {
-            id: 'a2',
-            title: 'Posted Senior React Developer role',
-            subtitle: 'Full-time • Bengaluru or Remote',
-            meta: '04 Jan 2026',
-          },
-        ],
-      },
-      {
-        id: 'c1',
-        name: 'Acme Technologies Pvt Ltd',
-        logoUrl: '',
-        primaryRecruiter: 'Rohit Sharma',
-        primaryRole: 'Senior Talent Partner',
-        email: 'rohit.sharma@acmetech.com',
-        phone: '+91 98765 43210',
-        industry: 'Technology',
-        location: 'Bengaluru, India',
-        verificationStatus: 'Verified',
-        accountStatus: 'Active',
-        isVerified: true,
-        joinedDate: 'Jan 08, 2025',
-        website: 'acmetech.com',
-        description:
-          'Product-led SaaS company focused on developer tooling and cloud-native infrastructure.',
-        verificationReviewedAt: 'Feb 12, 2025',
-        riskTag: 'Low risk',
-        stats: {
-          totalJobs: 48,
-          totalProjects: 12,
-          openJobs: 9,
-          closedJobs: 39,
-          activeProjects: 4,
-          completedProjects: 8,
-          activeHires: 16,
-        },
-        financials: {
-          totalCommission: 720000,
-          totalPaid: 5200000,
-          pendingCommission: 85000,
-          activeEscrows: 3,
-          disputedEscrows: 1,
-          payoutTime: '5-7 working days',
-          lastPayout: 'Feb 10, 2026',
-        },
-        risk: {
-          reports: 2,
-          disputes: 1,
-          warnings: 0,
-          lastIncident: 'Minor payment delay reported Oct 2025',
-          level: 'Low',
-        },
-        paymentsHistory: [
-          {
-            id: 'p1',
-            title: 'Commission payout – Full-time hire',
-            subtitle: '₹32,000 • Backend Engineer • Jan 2026',
-            meta: 'Processed • 06 Feb 2026',
-          },
-          {
-            id: 'p2',
-            title: 'Commission payout – Freelance project',
-            subtitle: '₹18,000 • React dashboard revamp • Dec 2025',
-            meta: 'Processed • 08 Jan 2026',
-          },
-        ],
-        disputesHistory: [
-          {
-            id: 'd1',
-            title: 'Payment dispute – Short-term contract',
-            subtitle: 'Raised by freelancer • Resolved in favour of company',
-            meta: 'Closed • Nov 2025',
-          },
-        ],
-        activityTimeline: [
-          {
-            id: 'a1',
-            title: 'Company verified by admin',
-            subtitle: 'Documents reviewed and approved',
-            meta: '12 Feb 2025',
-          },
-          {
-            id: 'a2',
-            title: 'Posted Senior React Developer role',
-            subtitle: 'Full-time • Bengaluru or Remote',
-            meta: '04 Jan 2026',
-          },
-        ],
-      },
-      {
-        id: 'c1',
-        name: 'Acme Technologies Pvt Ltd',
-        logoUrl: '',
-        primaryRecruiter: 'Rohit Sharma',
-        primaryRole: 'Senior Talent Partner',
-        email: 'rohit.sharma@acmetech.com',
-        phone: '+91 98765 43210',
-        industry: 'Technology',
-        location: 'Bengaluru, India',
-        verificationStatus: 'Verified',
-        accountStatus: 'Active',
-        isVerified: true,
-        joinedDate: 'Jan 08, 2025',
-        website: 'acmetech.com',
-        description:
-          'Product-led SaaS company focused on developer tooling and cloud-native infrastructure.',
-        verificationReviewedAt: 'Feb 12, 2025',
-        riskTag: 'Low risk',
-        stats: {
-          totalJobs: 48,
-          totalProjects: 12,
-          openJobs: 9,
-          closedJobs: 39,
-          activeProjects: 4,
-          completedProjects: 8,
-          activeHires: 16,
-        },
-        financials: {
-          totalCommission: 720000,
-          totalPaid: 5200000,
-          pendingCommission: 85000,
-          activeEscrows: 3,
-          disputedEscrows: 1,
-          payoutTime: '5-7 working days',
-          lastPayout: 'Feb 10, 2026',
-        },
-        risk: {
-          reports: 2,
-          disputes: 1,
-          warnings: 0,
-          lastIncident: 'Minor payment delay reported Oct 2025',
-          level: 'Low',
-        },
-        paymentsHistory: [
-          {
-            id: 'p1',
-            title: 'Commission payout – Full-time hire',
-            subtitle: '₹32,000 • Backend Engineer • Jan 2026',
-            meta: 'Processed • 06 Feb 2026',
-          },
-          {
-            id: 'p2',
-            title: 'Commission payout – Freelance project',
-            subtitle: '₹18,000 • React dashboard revamp • Dec 2025',
-            meta: 'Processed • 08 Jan 2026',
-          },
-        ],
-        disputesHistory: [
-          {
-            id: 'd1',
-            title: 'Payment dispute – Short-term contract',
-            subtitle: 'Raised by freelancer • Resolved in favour of company',
-            meta: 'Closed • Nov 2025',
-          },
-        ],
-        activityTimeline: [
-          {
-            id: 'a1',
-            title: 'Company verified by admin',
-            subtitle: 'Documents reviewed and approved',
-            meta: '12 Feb 2025',
-          },
-          {
-            id: 'a2',
-            title: 'Posted Senior React Developer role',
-            subtitle: 'Full-time • Bengaluru or Remote',
-            meta: '04 Jan 2026',
-          },
-        ],
-      },
-      {
-        id: 'c1',
-        name: 'Acme Technologies Pvt Ltd',
-        logoUrl: '',
-        primaryRecruiter: 'Rohit Sharma',
-        primaryRole: 'Senior Talent Partner',
-        email: 'rohit.sharma@acmetech.com',
-        phone: '+91 98765 43210',
-        industry: 'Technology',
-        location: 'Bengaluru, India',
-        verificationStatus: 'Verified',
-        accountStatus: 'Active',
-        isVerified: true,
-        joinedDate: 'Jan 08, 2025',
-        website: 'acmetech.com',
-        description:
-          'Product-led SaaS company focused on developer tooling and cloud-native infrastructure.',
-        verificationReviewedAt: 'Feb 12, 2025',
-        riskTag: 'Low risk',
-        stats: {
-          totalJobs: 48,
-          totalProjects: 12,
-          openJobs: 9,
-          closedJobs: 39,
-          activeProjects: 4,
-          completedProjects: 8,
-          activeHires: 16,
-        },
-        financials: {
-          totalCommission: 720000,
-          totalPaid: 5200000,
-          pendingCommission: 85000,
-          activeEscrows: 3,
-          disputedEscrows: 1,
-          payoutTime: '5-7 working days',
-          lastPayout: 'Feb 10, 2026',
-        },
-        risk: {
-          reports: 2,
-          disputes: 1,
-          warnings: 0,
-          lastIncident: 'Minor payment delay reported Oct 2025',
-          level: 'Low',
-        },
-        paymentsHistory: [
-          {
-            id: 'p1',
-            title: 'Commission payout – Full-time hire',
-            subtitle: '₹32,000 • Backend Engineer • Jan 2026',
-            meta: 'Processed • 06 Feb 2026',
-          },
-          {
-            id: 'p2',
-            title: 'Commission payout – Freelance project',
-            subtitle: '₹18,000 • React dashboard revamp • Dec 2025',
-            meta: 'Processed • 08 Jan 2026',
-          },
-        ],
-        disputesHistory: [
-          {
-            id: 'd1',
-            title: 'Payment dispute – Short-term contract',
-            subtitle: 'Raised by freelancer • Resolved in favour of company',
-            meta: 'Closed • Nov 2025',
-          },
-        ],
-        activityTimeline: [
-          {
-            id: 'a1',
-            title: 'Company verified by admin',
-            subtitle: 'Documents reviewed and approved',
-            meta: '12 Feb 2025',
-          },
-          {
-            id: 'a2',
-            title: 'Posted Senior React Developer role',
-            subtitle: 'Full-time • Bengaluru or Remote',
-            meta: '04 Jan 2026',
-          },
-        ],
-      },
-      {
-        id: 'c1',
-        name: 'Acme Technologies Pvt Ltd',
-        logoUrl: '',
-        primaryRecruiter: 'Rohit Sharma',
-        primaryRole: 'Senior Talent Partner',
-        email: 'rohit.sharma@acmetech.com',
-        phone: '+91 98765 43210',
-        industry: 'Technology',
-        location: 'Bengaluru, India',
-        verificationStatus: 'Verified',
-        accountStatus: 'Active',
-        isVerified: true,
-        joinedDate: 'Jan 08, 2025',
-        website: 'acmetech.com',
-        description:
-          'Product-led SaaS company focused on developer tooling and cloud-native infrastructure.',
-        verificationReviewedAt: 'Feb 12, 2025',
-        riskTag: 'Low risk',
-        stats: {
-          totalJobs: 48,
-          totalProjects: 12,
-          openJobs: 9,
-          closedJobs: 39,
-          activeProjects: 4,
-          completedProjects: 8,
-          activeHires: 16,
-        },
-        financials: {
-          totalCommission: 720000,
-          totalPaid: 5200000,
-          pendingCommission: 85000,
-          activeEscrows: 3,
-          disputedEscrows: 1,
-          payoutTime: '5-7 working days',
-          lastPayout: 'Feb 10, 2026',
-        },
-        risk: {
-          reports: 2,
-          disputes: 1,
-          warnings: 0,
-          lastIncident: 'Minor payment delay reported Oct 2025',
-          level: 'Low',
-        },
-        paymentsHistory: [
-          {
-            id: 'p1',
-            title: 'Commission payout – Full-time hire',
-            subtitle: '₹32,000 • Backend Engineer • Jan 2026',
-            meta: 'Processed • 06 Feb 2026',
-          },
-          {
-            id: 'p2',
-            title: 'Commission payout – Freelance project',
-            subtitle: '₹18,000 • React dashboard revamp • Dec 2025',
-            meta: 'Processed • 08 Jan 2026',
-          },
-        ],
-        disputesHistory: [
-          {
-            id: 'd1',
-            title: 'Payment dispute – Short-term contract',
-            subtitle: 'Raised by freelancer • Resolved in favour of company',
-            meta: 'Closed • Nov 2025',
-          },
-        ],
-        activityTimeline: [
-          {
-            id: 'a1',
-            title: 'Company verified by admin',
-            subtitle: 'Documents reviewed and approved',
-            meta: '12 Feb 2025',
-          },
-          {
-            id: 'a2',
-            title: 'Posted Senior React Developer role',
-            subtitle: 'Full-time • Bengaluru or Remote',
-            meta: '04 Jan 2026',
-          },
-        ],
-      },
-      {
-        id: 'c1',
-        name: 'Acme Technologies Pvt Ltd',
-        logoUrl: '',
-        primaryRecruiter: 'Rohit Sharma',
-        primaryRole: 'Senior Talent Partner',
-        email: 'rohit.sharma@acmetech.com',
-        phone: '+91 98765 43210',
-        industry: 'Technology',
-        location: 'Bengaluru, India',
-        verificationStatus: 'Verified',
-        accountStatus: 'Active',
-        isVerified: true,
-        joinedDate: 'Jan 08, 2025',
-        website: 'acmetech.com',
-        description:
-          'Product-led SaaS company focused on developer tooling and cloud-native infrastructure.',
-        verificationReviewedAt: 'Feb 12, 2025',
-        riskTag: 'Low risk',
-        stats: {
-          totalJobs: 48,
-          totalProjects: 12,
-          openJobs: 9,
-          closedJobs: 39,
-          activeProjects: 4,
-          completedProjects: 8,
-          activeHires: 16,
-        },
-        financials: {
-          totalCommission: 720000,
-          totalPaid: 5200000,
-          pendingCommission: 85000,
-          activeEscrows: 3,
-          disputedEscrows: 1,
-          payoutTime: '5-7 working days',
-          lastPayout: 'Feb 10, 2026',
-        },
-        risk: {
-          reports: 2,
-          disputes: 1,
-          warnings: 0,
-          lastIncident: 'Minor payment delay reported Oct 2025',
-          level: 'Low',
-        },
-        paymentsHistory: [
-          {
-            id: 'p1',
-            title: 'Commission payout – Full-time hire',
-            subtitle: '₹32,000 • Backend Engineer • Jan 2026',
-            meta: 'Processed • 06 Feb 2026',
-          },
-          {
-            id: 'p2',
-            title: 'Commission payout – Freelance project',
-            subtitle: '₹18,000 • React dashboard revamp • Dec 2025',
-            meta: 'Processed • 08 Jan 2026',
-          },
-        ],
-        disputesHistory: [
-          {
-            id: 'd1',
-            title: 'Payment dispute – Short-term contract',
-            subtitle: 'Raised by freelancer • Resolved in favour of company',
-            meta: 'Closed • Nov 2025',
-          },
-        ],
-        activityTimeline: [
-          {
-            id: 'a1',
-            title: 'Company verified by admin',
-            subtitle: 'Documents reviewed and approved',
-            meta: '12 Feb 2025',
-          },
-          {
-            id: 'a2',
-            title: 'Posted Senior React Developer role',
-            subtitle: 'Full-time • Bengaluru or Remote',
-            meta: '04 Jan 2026',
-          },
-        ],
-      },
-      {
-        id: 'c1',
-        name: 'Acme Technologies Pvt Ltd',
-        logoUrl: '',
-        primaryRecruiter: 'Rohit Sharma',
-        primaryRole: 'Senior Talent Partner',
-        email: 'rohit.sharma@acmetech.com',
-        phone: '+91 98765 43210',
-        industry: 'Technology',
-        location: 'Bengaluru, India',
-        verificationStatus: 'Verified',
-        accountStatus: 'Active',
-        isVerified: true,
-        joinedDate: 'Jan 08, 2025',
-        website: 'acmetech.com',
-        description:
-          'Product-led SaaS company focused on developer tooling and cloud-native infrastructure.',
-        verificationReviewedAt: 'Feb 12, 2025',
-        riskTag: 'Low risk',
-        stats: {
-          totalJobs: 48,
-          totalProjects: 12,
-          openJobs: 9,
-          closedJobs: 39,
-          activeProjects: 4,
-          completedProjects: 8,
-          activeHires: 16,
-        },
-        financials: {
-          totalCommission: 720000,
-          totalPaid: 5200000,
-          pendingCommission: 85000,
-          activeEscrows: 3,
-          disputedEscrows: 1,
-          payoutTime: '5-7 working days',
-          lastPayout: 'Feb 10, 2026',
-        },
-        risk: {
-          reports: 2,
-          disputes: 1,
-          warnings: 0,
-          lastIncident: 'Minor payment delay reported Oct 2025',
-          level: 'Low',
-        },
-        paymentsHistory: [
-          {
-            id: 'p1',
-            title: 'Commission payout – Full-time hire',
-            subtitle: '₹32,000 • Backend Engineer • Jan 2026',
-            meta: 'Processed • 06 Feb 2026',
-          },
-          {
-            id: 'p2',
-            title: 'Commission payout – Freelance project',
-            subtitle: '₹18,000 • React dashboard revamp • Dec 2025',
-            meta: 'Processed • 08 Jan 2026',
-          },
-        ],
-        disputesHistory: [
-          {
-            id: 'd1',
-            title: 'Payment dispute – Short-term contract',
-            subtitle: 'Raised by freelancer • Resolved in favour of company',
-            meta: 'Closed • Nov 2025',
-          },
-        ],
-        activityTimeline: [
-          {
-            id: 'a1',
-            title: 'Company verified by admin',
-            subtitle: 'Documents reviewed and approved',
-            meta: '12 Feb 2025',
-          },
-          {
-            id: 'a2',
-            title: 'Posted Senior React Developer role',
-            subtitle: 'Full-time • Bengaluru or Remote',
-            meta: '04 Jan 2026',
-          },
-        ],
-      },
-      {
-        id: 'c1',
-        name: 'Acme Technologies Pvt Ltd',
-        logoUrl: '',
-        primaryRecruiter: 'Rohit Sharma',
-        primaryRole: 'Senior Talent Partner',
-        email: 'rohit.sharma@acmetech.com',
-        phone: '+91 98765 43210',
-        industry: 'Technology',
-        location: 'Bengaluru, India',
-        verificationStatus: 'Verified',
-        accountStatus: 'Active',
-        isVerified: true,
-        joinedDate: 'Jan 08, 2025',
-        website: 'acmetech.com',
-        description:
-          'Product-led SaaS company focused on developer tooling and cloud-native infrastructure.',
-        verificationReviewedAt: 'Feb 12, 2025',
-        riskTag: 'Low risk',
-        stats: {
-          totalJobs: 48,
-          totalProjects: 12,
-          openJobs: 9,
-          closedJobs: 39,
-          activeProjects: 4,
-          completedProjects: 8,
-          activeHires: 16,
-        },
-        financials: {
-          totalCommission: 720000,
-          totalPaid: 5200000,
-          pendingCommission: 85000,
-          activeEscrows: 3,
-          disputedEscrows: 1,
-          payoutTime: '5-7 working days',
-          lastPayout: 'Feb 10, 2026',
-        },
-        risk: {
-          reports: 2,
-          disputes: 1,
-          warnings: 0,
-          lastIncident: 'Minor payment delay reported Oct 2025',
-          level: 'Low',
-        },
-        paymentsHistory: [
-          {
-            id: 'p1',
-            title: 'Commission payout – Full-time hire',
-            subtitle: '₹32,000 • Backend Engineer • Jan 2026',
-            meta: 'Processed • 06 Feb 2026',
-          },
-          {
-            id: 'p2',
-            title: 'Commission payout – Freelance project',
-            subtitle: '₹18,000 • React dashboard revamp • Dec 2025',
-            meta: 'Processed • 08 Jan 2026',
-          },
-        ],
-        disputesHistory: [
-          {
-            id: 'd1',
-            title: 'Payment dispute – Short-term contract',
-            subtitle: 'Raised by freelancer • Resolved in favour of company',
-            meta: 'Closed • Nov 2025',
-          },
-        ],
-        activityTimeline: [
-          {
-            id: 'a1',
-            title: 'Company verified by admin',
-            subtitle: 'Documents reviewed and approved',
-            meta: '12 Feb 2025',
-          },
-          {
-            id: 'a2',
-            title: 'Posted Senior React Developer role',
-            subtitle: 'Full-time • Bengaluru or Remote',
-            meta: '04 Jan 2026',
-          },
-        ],
-      },
-      {
-        id: 'c1',
-        name: 'Acme Technologies Pvt Ltd',
-        logoUrl: '',
-        primaryRecruiter: 'Rohit Sharma',
-        primaryRole: 'Senior Talent Partner',
-        email: 'rohit.sharma@acmetech.com',
-        phone: '+91 98765 43210',
-        industry: 'Technology',
-        location: 'Bengaluru, India',
-        verificationStatus: 'Verified',
-        accountStatus: 'Suspended',
-        isVerified: true,
-        joinedDate: 'Jan 08, 2025',
-        website: 'acmetech.com',
-        description:
-          'Product-led SaaS company focused on developer tooling and cloud-native infrastructure.',
-        verificationReviewedAt: 'Feb 12, 2025',
-        riskTag: 'Low risk',
-        stats: {
-          totalJobs: 48,
-          totalProjects: 12,
-          openJobs: 9,
-          closedJobs: 39,
-          activeProjects: 4,
-          completedProjects: 8,
-          activeHires: 16,
-        },
-        financials: {
-          totalCommission: 720000,
-          totalPaid: 5200000,
-          pendingCommission: 85000,
-          activeEscrows: 3,
-          disputedEscrows: 1,
-          payoutTime: '5-7 working days',
-          lastPayout: 'Feb 10, 2026',
-        },
-        risk: {
-          reports: 2,
-          disputes: 1,
-          warnings: 0,
-          lastIncident: 'Minor payment delay reported Oct 2025',
-          level: 'Low',
-        },
-        paymentsHistory: [
-          {
-            id: 'p1',
-            title: 'Commission payout – Full-time hire',
-            subtitle: '₹32,000 • Backend Engineer • Jan 2026',
-            meta: 'Processed • 06 Feb 2026',
-          },
-          {
-            id: 'p2',
-            title: 'Commission payout – Freelance project',
-            subtitle: '₹18,000 • React dashboard revamp • Dec 2025',
-            meta: 'Processed • 08 Jan 2026',
-          },
-        ],
-        disputesHistory: [
-          {
-            id: 'd1',
-            title: 'Payment dispute – Short-term contract',
-            subtitle: 'Raised by freelancer • Resolved in favour of company',
-            meta: 'Closed • Nov 2025',
-          },
-        ],
-        activityTimeline: [
-          {
-            id: 'a1',
-            title: 'Company verified by admin',
-            subtitle: 'Documents reviewed and approved',
-            meta: '12 Feb 2025',
-          },
-          {
-            id: 'a2',
-            title: 'Posted Senior React Developer role',
-            subtitle: 'Full-time • Bengaluru or Remote',
-            meta: '04 Jan 2026',
-          },
-        ],
-      },
-      {
-        id: 'c2',
-        name: 'BrightPath Learning Solutions',
-        logoUrl: '',
-        primaryRecruiter: 'Neha Verma',
-        primaryRole: 'HR Manager',
-        email: 'neha@brightpath.edu',
-        phone: '+91 98200 11223',
-        industry: 'Education',
-        location: 'Pune, India',
-        verificationStatus: 'Pending',
-        accountStatus: 'Active',
-        isVerified: false,
-        joinedDate: 'Mar 22, 2025',
-        website: 'brightpath.edu',
-        description:
-          'EdTech organisation building hybrid learning products and upskilling solutions for colleges.',
-        verificationReviewedAt: null,
-        riskTag: '',
-        stats: {
-          totalJobs: 18,
-          totalProjects: 6,
-          openJobs: 3,
-          closedJobs: 15,
-          activeProjects: 2,
-          completedProjects: 4,
-          activeHires: 7,
-        },
-        financials: {
-          totalCommission: 210000,
-          totalPaid: 1200000,
-          pendingCommission: 30000,
-          activeEscrows: 1,
-          disputedEscrows: 0,
-          payoutTime: '7-9 working days',
-          lastPayout: 'Jan 18, 2026',
-        },
-        risk: {
-          reports: 0,
-          disputes: 0,
-          warnings: 0,
-          lastIncident: '',
-          level: 'Low',
-        },
-        paymentsHistory: [],
-        disputesHistory: [],
-        activityTimeline: [],
-      },
-      {
-        id: 'c3',
-        name: 'UrbanWorks Studio',
-        logoUrl: '',
-        primaryRecruiter: 'Arjun Mehta',
-        primaryRole: 'Founder & Recruiter',
-        email: 'arjun@urbanworks.studio',
-        phone: '+91 98191 22114',
-        industry: 'Design & Creative',
-        location: 'Remote, India',
-        verificationStatus: 'Verified',
-        accountStatus: 'Suspended',
-        isVerified: true,
-        joinedDate: 'Aug 14, 2024',
-        website: 'urbanworks.studio',
-        description:
-          'Design collective working with startups for brand, product and motion design projects.',
-        verificationReviewedAt: 'Sep 02, 2024',
-        riskTag: 'Under review',
-        stats: {
-          totalJobs: 9,
-          totalProjects: 26,
-          openJobs: 1,
-          closedJobs: 8,
-          activeProjects: 5,
-          completedProjects: 21,
-          activeHires: 4,
-        },
-        financials: {
-          totalCommission: 340000,
-          totalPaid: 1750000,
-          pendingCommission: 120000,
-          activeEscrows: 2,
-          disputedEscrows: 2,
-          payoutTime: '10-12 working days',
-          lastPayout: 'Dec 22, 2025',
-        },
-        risk: {
-          reports: 5,
-          disputes: 3,
-          warnings: 2,
-          lastIncident: 'Multiple disputes on delayed milestone approvals',
-          level: 'High',
-        },
-        paymentsHistory: [],
-        disputesHistory: [],
-        activityTimeline: [],
-      },
-    ],
-    [],
-  );
+  const [companies, setCompanies] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
+  const getCookie = (name) => {
+    try {
+      return document.cookie
+        .split('; ')
+        .find((row) => row.startsWith(`${name}=`))
+        ?.split('=')[1];
+    } catch {
+      return '';
+    }
+  };
+
+  const formatDate = (iso) => {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+      });
+    } catch {
+      return iso;
+    }
+  };
+
+  const mapRecruiterToCompany = (r) => {
+    const cp = r?.companyProfile || {};
+    const website =
+      cp?.companyWebsite ||
+      (cp?.socialLinks && cp.socialLinks.website) ||
+      '';
+    return {
+      id: r?._id || r?.recId || '',
+      name: cp?.companyName || r?.Fullname || 'Unknown',
+      logoUrl: cp?.companyLogo || '',
+      primaryRecruiter: r?.Fullname || '',
+      primaryRole: cp?.designation || 'Recruiter',
+      email: r?.email || '',
+      phone: r?.number || '',
+      industry: cp?.industry || 'General',
+      location: cp?.companyLocation || '',
+      verificationStatus: r?.isVerified ? 'Verified' : 'Pending',
+      accountStatus: 'Active',
+      isVerified: !!r?.isVerified,
+      joinedDate: formatDate(r?.createdAt),
+      website,
+      description: cp?.companyDescription || '',
+      verificationReviewedAt: formatDate(r?.updatedAt),
+      riskTag: '',
+      stats: {
+        totalJobs: 0,
+        totalProjects: 0,
+        openJobs: 0,
+        closedJobs: 0,
+        activeProjects: 0,
+        completedProjects: 0,
+        activeHires: 0,
+      },
+      financials: {
+        totalCommission: 0,
+        totalPaid: 0,
+        pendingCommission: 0,
+        escrowIn: 0,
+        escrowOut: 0,
+        activeEscrows: 0,
+        disputedEscrows: 0,
+        payoutTime: '',
+        lastPayout: '',
+      },
+      risk: {
+        reports: 0,
+        disputes: 0,
+        warnings: 0,
+        lastIncident: '',
+        level: 'Low',
+      },
+      jobsPosted: [],
+      projectsPosted: [],
+      verificationDocuments: [],
+      adminNotes: [],
+      paymentsHistory: [],
+      disputesHistory: [],
+      activityTimeline: [],
+    };
+  };
+
+  useEffect(() => {
+    let alive = true;
+    const run = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const base =
+          import.meta.env.VITE_API_URL ||
+          (typeof window !== 'undefined' ? window.API_BASE_URL : '') ||
+          (typeof window !== 'undefined' ? window.location.origin : '');
+        const url = `${base}/gknbvg/SkillPort-admin/ertqyuiok/get-all-recruiters`;
+        const token =
+          getCookie('AdminToken') ||
+          import.meta.env.VITE_ADMIN_TOKEN ||
+          (typeof window !== 'undefined' && window.ADMIN_TOKEN) ||
+          (typeof window !== 'undefined' &&
+            window.localStorage &&
+            window.localStorage.getItem('admin_token')) ||
+          '';
+        const headers = {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        };
+        const arr = await loadRecruitersOnce(url, headers);
+        if (!alive) return;
+        const mapped = arr.map(mapRecruiterToCompany);
+        setCompanies(mapped);
+      } catch (err) {
+        if (!alive) return;
+        setError('Failed to load companies');
+        setCompanies([]);
+        toast.error('Failed to load companies');
+      } finally {
+        if (alive) setLoading(false);
+      }
+    };
+    run();
+    return () => {
+      alive = false;
+    };
+  }, []);
+ 
   const allCompanies = useMemo(
     () => [...addedCompanies, ...companies],
     [addedCompanies, companies],
@@ -1421,6 +446,17 @@ const Companies = () => {
           </button>
         </div>
       </div>
+
+      {loading && (
+        <div className="rounded-2xl border border-slate-100 bg-white p-4 text-xs text-slate-600">
+          Loading companies…
+        </div>
+      )}
+      {!!error && !loading && (
+        <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4 text-xs text-rose-700">
+          {error}
+        </div>
+      )}
 
       <CompaniesTable
         companies={filteredCompanies}

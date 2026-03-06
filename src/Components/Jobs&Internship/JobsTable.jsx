@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   MoreHorizontal,
   FlagTriangleRight,
@@ -40,8 +41,59 @@ const JobsTable = ({
   onBlockJob,
   onAddAdminNote,
 }) => {
-  const [activeMenuRowIndex, setActiveMenuRowIndex] = useState(null);
+  const [activeMenuState, setActiveMenuState] = useState({
+    index: null,
+    top: 0,
+    bottom: 0,
+    right: 0,
+    isNearBottom: false,
+  });
   const selectedCount = selectedJobIds.length;
+
+  useEffect(() => {
+    const closeMenu = () =>
+      setActiveMenuState((prev) => ({ ...prev, index: null }));
+
+    if (activeMenuState.index !== null) {
+      document.addEventListener('click', closeMenu);
+      window.addEventListener('scroll', closeMenu, true);
+      window.addEventListener('resize', closeMenu);
+    }
+
+    return () => {
+      document.removeEventListener('click', closeMenu);
+      window.removeEventListener('scroll', closeMenu, true);
+      window.removeEventListener('resize', closeMenu);
+    };
+  }, [activeMenuState.index]);
+
+  const handleMenuToggle = (index, e) => {
+    e.stopPropagation();
+    if (activeMenuState.index === index) {
+      setActiveMenuState({
+        index: null,
+        top: 0,
+        bottom: 0,
+        right: 0,
+        isNearBottom: false,
+      });
+      return;
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const windowHeight = window.innerHeight;
+    const spaceBelow = windowHeight - rect.bottom;
+    const menuHeight = 320; // approximate height of the menu
+    const isNearBottom = spaceBelow < menuHeight;
+
+    setActiveMenuState({
+      index,
+      top: rect.bottom,
+      bottom: rect.top,
+      right: window.innerWidth - rect.right,
+      isNearBottom,
+    });
+  };
 
   return (
     <div className="mt-6 rounded-2xl border border-slate-100 bg-white shadow-sm">
@@ -72,7 +124,6 @@ const JobsTable = ({
           <tbody>
             {jobs.map((job, index) => {
               const isSelected = selectedJobIds.includes(job.id);
-              const isNearBottom = index >= jobs.length - 5;
 
               const statusColorClasses =
                 job.status === 'Approved'
@@ -154,147 +205,188 @@ const JobsTable = ({
                   <td className="relative px-4 py-3 text-right">
                     <button
                       type="button"
-                      onClick={() =>
-                        setActiveMenuRowIndex((current) =>
-                          current === index ? null : index,
-                        )
-                      }
+                      onClick={(e) => handleMenuToggle(index, e)}
                       className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                     >
                       <MoreHorizontal className="h-4 w-4" />
                     </button>
-                    {activeMenuRowIndex === index && (
-                      <div
-                        className={`absolute z-20 w-72 rounded-2xl border border-slate-100 bg-white p-2 text-left shadow-xl ${
-                          isNearBottom
-                            ? 'bottom-full mb-2 right-0'
-                            : 'top-full mt-2 right-0'
-                        }`}
-                      >
-                        <button
-                          type="button"
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-slate-900 hover:bg-slate-50"
-                          onClick={() => {
-                            if (onOpenJobDetails) {
-                              onOpenJobDetails(job);
-                            }
-                            setActiveMenuRowIndex(null);
+                    {activeMenuState.index === index &&
+                      createPortal(
+                        <div
+                          className="fixed z-50 w-72 rounded-2xl border border-slate-100 bg-white p-2 text-left shadow-xl"
+                          style={{
+                            top: activeMenuState.isNearBottom
+                              ? 'auto'
+                              : activeMenuState.top + 4,
+                            bottom: activeMenuState.isNearBottom
+                              ? window.innerHeight - activeMenuState.bottom + 4
+                              : 'auto',
+                            right: activeMenuState.right,
                           }}
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          <Eye className="h-4 w-4 text-slate-700" />
-                          <span className="text-xs font-medium">View Job Details</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-slate-900 hover:bg-slate-50"
-                          onClick={() => {
-                            if (onOpenApplicants) {
-                              onOpenApplicants(job);
-                            }
-                            setActiveMenuRowIndex(null);
-                          }}
-                        >
-                          <Users className="h-4 w-4 text-slate-700" />
-                          <span className="text-xs font-medium">
-                            View Applicants ({job.applicantsCount || 0})
-                          </span>
-                        </button>
-                        {isPending && (
-                          <>
-                            <button
-                              type="button"
-                              className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-emerald-600 hover:bg-emerald-50"
-                              onClick={() => {
-                                if (onApproveJob) {
-                                  onApproveJob(job);
-                                }
-                                setActiveMenuRowIndex(null);
-                              }}
-                            >
-                              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                              <span className="text-xs font-medium">Approve Job</span>
-                            </button>
-                            <button
-                              type="button"
-                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-rose-600 hover:bg-rose-50"
-                              onClick={() => {
-                                if (onRejectJob) {
-                                  onRejectJob(job);
-                                }
-                                setActiveMenuRowIndex(null);
-                              }}
-                            >
-                              <XCircle className="h-4 w-4 text-rose-600" />
-                              <span className="text-xs font-medium">Reject Job</span>
-                            </button>
-                            <button
-                              type="button"
-                              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-amber-700 hover:bg-amber-50"
-                              onClick={() => {
-                                if (onRequestChanges) {
-                                  onRequestChanges(job);
-                                }
-                                setActiveMenuRowIndex(null);
-                              }}
-                            >
-                              <MessageSquare className="h-4 w-4 text-amber-600" />
-                              <span className="text-xs font-medium">Request Changes</span>
-                            </button>
-                          </>
-                        )}
-                        {isApproved && (
                           <button
                             type="button"
-                            className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-rose-600 hover:bg-rose-50"
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-slate-900 hover:bg-slate-50"
                             onClick={() => {
-                              if (onBlockJob) {
-                                onBlockJob(job);
+                              if (onOpenJobDetails) {
+                                onOpenJobDetails(job);
                               }
-                              setActiveMenuRowIndex(null);
+                              setActiveMenuState((prev) => ({
+                                ...prev,
+                                index: null,
+                              }));
                             }}
                           >
-                            <AlertTriangle className="h-4 w-4 text-rose-600" />
-                            <span className="text-xs font-medium">Block / Remove Job</span>
+                            <Eye className="h-4 w-4 text-slate-700" />
+                            <span className="text-xs font-medium">
+                              View Job Details
+                            </span>
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-slate-900 hover:bg-slate-50"
-                          onClick={() => {
-                            if (onAddAdminNote) {
-                              onAddAdminNote(job);
-                            }
-                            setActiveMenuRowIndex(null);
-                          }}
-                        >
-                          <FileText className="h-4 w-4 text-slate-700" />
-                          <span className="text-xs font-medium">Add Admin Note</span>
-                        </button>
-                        <button
-                          type="button"
-                          className={`mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left ${
-                            hasReports
-                              ? 'text-amber-700 hover:bg-amber-50'
-                              : 'text-slate-500 hover:bg-slate-50'
-                          }`}
-                          onClick={() => {
-                            if (onOpenJobReports) {
-                              onOpenJobReports(job);
-                            }
-                            setActiveMenuRowIndex(null);
-                          }}
-                        >
-                          <FlagTriangleRight
-                            className={`h-4 w-4 ${
-                              hasReports ? 'text-amber-600' : 'text-slate-400'
+                          <button
+                            type="button"
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-slate-900 hover:bg-slate-50"
+                            onClick={() => {
+                              if (onOpenApplicants) {
+                                onOpenApplicants(job);
+                              }
+                              setActiveMenuState((prev) => ({
+                                ...prev,
+                                index: null,
+                              }));
+                            }}
+                          >
+                            <Users className="h-4 w-4 text-slate-700" />
+                            <span className="text-xs font-medium">
+                              View Applicants ({job.applicantsCount || 0})
+                            </span>
+                          </button>
+                          {isPending && (
+                            <>
+                              <button
+                                type="button"
+                                className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-emerald-600 hover:bg-emerald-50"
+                                onClick={() => {
+                                  if (onApproveJob) {
+                                    onApproveJob(job);
+                                  }
+                                  setActiveMenuState((prev) => ({
+                                    ...prev,
+                                    index: null,
+                                  }));
+                                }}
+                              >
+                                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                <span className="text-xs font-medium">
+                                  Approve Job
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-rose-600 hover:bg-rose-50"
+                                onClick={() => {
+                                  if (onRejectJob) {
+                                    onRejectJob(job);
+                                  }
+                                  setActiveMenuState((prev) => ({
+                                    ...prev,
+                                    index: null,
+                                  }));
+                                }}
+                              >
+                                <XCircle className="h-4 w-4 text-rose-600" />
+                                <span className="text-xs font-medium">
+                                  Reject Job
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-amber-700 hover:bg-amber-50"
+                                onClick={() => {
+                                  if (onRequestChanges) {
+                                    onRequestChanges(job);
+                                  }
+                                  setActiveMenuState((prev) => ({
+                                    ...prev,
+                                    index: null,
+                                  }));
+                                }}
+                              >
+                                <MessageSquare className="h-4 w-4 text-amber-600" />
+                                <span className="text-xs font-medium">
+                                  Request Changes
+                                </span>
+                              </button>
+                            </>
+                          )}
+                          {isApproved && (
+                            <button
+                              type="button"
+                              className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-rose-600 hover:bg-rose-50"
+                              onClick={() => {
+                                if (onBlockJob) {
+                                  onBlockJob(job);
+                                }
+                                setActiveMenuState((prev) => ({
+                                  ...prev,
+                                  index: null,
+                                }));
+                              }}
+                            >
+                              <AlertTriangle className="h-4 w-4 text-rose-600" />
+                              <span className="text-xs font-medium">
+                                Block / Remove Job
+                              </span>
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-slate-900 hover:bg-slate-50"
+                            onClick={() => {
+                              if (onAddAdminNote) {
+                                onAddAdminNote(job);
+                              }
+                              setActiveMenuState((prev) => ({
+                                ...prev,
+                                index: null,
+                              }));
+                            }}
+                          >
+                            <FileText className="h-4 w-4 text-slate-700" />
+                            <span className="text-xs font-medium">
+                              Add Admin Note
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            className={`mt-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left ${
+                              hasReports
+                                ? 'text-amber-700 hover:bg-amber-50'
+                                : 'text-slate-500 hover:bg-slate-50'
                             }`}
-                          />
-                          <span className="text-xs font-medium">
-                            View Reports{hasReports ? ` (${job.reportCount})` : ''}
-                          </span>
-                        </button>
-                      </div>
-                    )}
+                            onClick={() => {
+                              if (onOpenJobReports) {
+                                onOpenJobReports(job);
+                              }
+                              setActiveMenuState((prev) => ({
+                                ...prev,
+                                index: null,
+                              }));
+                            }}
+                          >
+                            <FlagTriangleRight
+                              className={`h-4 w-4 ${
+                                hasReports ? 'text-amber-600' : 'text-slate-400'
+                              }`}
+                            />
+                            <span className="text-xs font-medium">
+                              View Reports
+                              {hasReports ? ` (${job.reportCount})` : ''}
+                            </span>
+                          </button>
+                        </div>,
+                        document.body
+                      )}
                   </td>
                 </tr>
               );

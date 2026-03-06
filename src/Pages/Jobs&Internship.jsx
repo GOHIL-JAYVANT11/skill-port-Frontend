@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Download,
   Briefcase,
@@ -18,7 +18,7 @@ import {
   BlockJobModal,
   AdminNoteModal,
   ApplicantsModal,
-  JobReportsModal,
+  JobReportsModal,  
 } from '../Components/Jobs&Internship/JobModals';
 import useHeaderExportButtonAnimation, {
   useUserStatsCardsAnimation,
@@ -29,6 +29,10 @@ export const JobsAndInternship = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isAdvancedFilterOpen, setIsAdvancedFilterOpen] = useState(false);
+  const [jobs, setJobs] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({
     jobType: 'All Job Types',
     status: 'All Status',
@@ -63,581 +67,114 @@ export const JobsAndInternship = () => {
   useUserStatsCardsAnimation(statsCardsRef);
   useUserFiltersAnimation(filtersRef);
 
-  const jobs = [
-    {
-      id: 'j1',
-      title: 'Senior React Developer',
-      company: 'Acme Corp',
-      location: 'Remote',
-      type: 'Full-Time',
-      status: 'Approved',
-      locationType: 'Remote',
-      applicantsCount: 24,
-      postedDate: '2026-02-15',
-      budget: '$80k - $100k / year',
-      experienceLevel: 'Mid',
-      recruiter: 'Jane Cooper',
-      recruiterEmail: 'jane.cooper@example.com',
-      skills: ['React', 'TypeScript', 'Node.js'],
-      reportCount: 1,
-      isFlagged: true,
-      applicants: [
-        {
-          id: 'a1',
-          name: 'John Doe',
-          email: 'john@email.com',
-          appliedDate: 'Jan 10, 2024',
-          skillMatch: 92,
-          status: 'Shortlisted',
-        },
-        {
-          id: 'a2',
-          name: 'Jane Smith',
-          email: 'jane@email.com',
-          appliedDate: 'Jan 11, 2024',
-          skillMatch: 88,
-          status: 'Interviewed',
-        },
-        {
-          id: 'a3',
-          name: 'Bob Wilson',
-          email: 'bob@email.com',
-          appliedDate: 'Jan 12, 2024',
-          skillMatch: 75,
-          status: 'Applied',
-        },
-      ],
-    },
-    {
-      id: 'j1',
-      title: 'Senior React Developer',
-      company: 'Acme Corp',
-      location: 'Remote',
-      type: 'Full-Time',
+  const formatBudget = (salary, salaryType) => {
+    if (!salary || (salary.minSalary == null && salary.maxSalary == null)) {
+      return salaryType || 'Not specified';
+    }
+    const min = salary.minSalary != null ? salary.minSalary : null;
+    const max = salary.maxSalary != null ? salary.maxSalary : null;
+    const fmt = (v) => Number(v).toLocaleString('en-IN');
+    if (min != null && max != null) {
+      return `₹${fmt(min)} - ₹${fmt(max)}${salaryType ? ` / ${salaryType}` : ''}`;
+    }
+    if (min != null) {
+      return `₹${fmt(min)}${salaryType ? ` / ${salaryType}` : ''}`;
+    }
+    return `₹${fmt(max)}${salaryType ? ` / ${salaryType}` : ''}`;
+  };
+
+  const mapApiJob = (item) => {
+    const recruiter = item?.recId || {};
+    const locationParts = [item?.City, item?.State, item?.Country].filter(Boolean);
+    return {
+      id: item?._id || '',
+      title: item?.jobtitle || 'Untitled',
+      company: recruiter?.Fullname || 'Unknown',
+      location: locationParts.join(', ') || 'Not specified',
+      type: item?.EmploymentType || 'Full-Time',
       status: 'Pending',
-      locationType: 'Remote',
-      applicantsCount: 24,
-      postedDate: '2026-02-15',
-      budget: '$80k - $100k / year',
-      experienceLevel: 'Mid',
-      recruiter: 'Jane Cooper',
-      recruiterEmail: 'jane.cooper@example.com',
-      skills: ['React', 'TypeScript', 'Node.js'],
-      reportCount: 1,
-      isFlagged: true,
-      applicants: [
-        {
-          id: 'a1',
-          name: 'John Doe',
-          email: 'john@email.com',
-          appliedDate: 'Jan 10, 2024',
-          skillMatch: 92,
-          status: 'Shortlisted',
-        },
-        {
-          id: 'a2',
-          name: 'Jane Smith',
-          email: 'jane@email.com',
-          appliedDate: 'Jan 11, 2024',
-          skillMatch: 88,
-          status: 'Interviewed',
-        },
-        {
-          id: 'a3',
-          name: 'Bob Wilson',
-          email: 'bob@email.com',
-          appliedDate: 'Jan 12, 2024',
-          skillMatch: 75,
-          status: 'Applied',
-        },
-      ],
-    },
-    {
-      id: 'j1',
-      title: 'Senior React Developer',
-      company: 'Acme Corp',
-      location: 'Remote',
-      type: 'Full-Time',
-      status: 'Pending',
-      locationType: 'Remote',
-      applicantsCount: 24,
-      postedDate: '2026-02-15',
-      budget: '$80k - $100k / year',
-      experienceLevel: 'Mid',
-      recruiter: 'Jane Cooper',
-      recruiterEmail: 'jane.cooper@example.com',
-      skills: ['React', 'TypeScript', 'Node.js'],
-      reportCount: 1,
-      isFlagged: true,
-      applicants: [
-        {
-          id: 'a1',
-          name: 'John Doe',
-          email: 'john@email.com',
-          appliedDate: 'Jan 10, 2024',
-          skillMatch: 92,
-          status: 'Shortlisted',
-        },
-        {
-          id: 'a2',
-          name: 'Jane Smith',
-          email: 'jane@email.com',
-          appliedDate: 'Jan 11, 2024',
-          skillMatch: 88,
-          status: 'Interviewed',
-        },
-        {
-          id: 'a3',
-          name: 'Bob Wilson',
-          email: 'bob@email.com',
-          appliedDate: 'Jan 12, 2024',
-          skillMatch: 75,
-          status: 'Applied',
-        },
-      ],
-    },
-    {
-      id: 'j1',
-      title: 'Senior React Developer',
-      company: 'Acme Corp',
-      location: 'Remote',
-      type: 'Full-Time',
-      status: 'Pending',
-      locationType: 'Remote',
-      applicantsCount: 24,
-      postedDate: '2026-02-15',
-      budget: '$80k - $100k / year',
-      experienceLevel: 'Mid',
-      recruiter: 'Jane Cooper',
-      recruiterEmail: 'jane.cooper@example.com',
-      skills: ['React', 'TypeScript', 'Node.js'],
-      reportCount: 1,
-      isFlagged: true,
-      applicants: [
-        {
-          id: 'a1',
-          name: 'John Doe',
-          email: 'john@email.com',
-          appliedDate: 'Jan 10, 2024',
-          skillMatch: 92,
-          status: 'Shortlisted',
-        },
-        {
-          id: 'a2',
-          name: 'Jane Smith',
-          email: 'jane@email.com',
-          appliedDate: 'Jan 11, 2024',
-          skillMatch: 88,
-          status: 'Interviewed',
-        },
-        {
-          id: 'a3',
-          name: 'Bob Wilson',
-          email: 'bob@email.com',
-          appliedDate: 'Jan 12, 2024',
-          skillMatch: 75,
-          status: 'Applied',
-        },
-      ],
-    },
-    {
-      id: 'j1',
-      title: 'Senior React Developer',
-      company: 'Acme Corp',
-      location: 'Remote',
-      type: 'Full-Time',
-      status: 'Pending',
-      locationType: 'Remote',
-      applicantsCount: 24,
-      postedDate: '2026-02-15',
-      budget: '$80k - $100k / year',
-      experienceLevel: 'Mid',
-      recruiter: 'Jane Cooper',
-      recruiterEmail: 'jane.cooper@example.com',
-      skills: ['React', 'TypeScript', 'Node.js'],
-      reportCount: 1,
-      isFlagged: true,
-      applicants: [
-        {
-          id: 'a1',
-          name: 'John Doe',
-          email: 'john@email.com',
-          appliedDate: 'Jan 10, 2024',
-          skillMatch: 92,
-          status: 'Shortlisted',
-        },
-        {
-          id: 'a2',
-          name: 'Jane Smith',
-          email: 'jane@email.com',
-          appliedDate: 'Jan 11, 2024',
-          skillMatch: 88,
-          status: 'Interviewed',
-        },
-        {
-          id: 'a3',
-          name: 'Bob Wilson',
-          email: 'bob@email.com',
-          appliedDate: 'Jan 12, 2024',
-          skillMatch: 75,
-          status: 'Applied',
-        },
-      ],
-    },
-    {
-      id: 'j1',
-      title: 'Senior React Developer',
-      company: 'Acme Corp',
-      location: 'Remote',
-      type: 'Full-Time',
-      status: 'Pending',
-      locationType: 'Remote',
-      applicantsCount: 24,
-      postedDate: '2026-02-15',
-      budget: '$80k - $100k / year',
-      experienceLevel: 'Mid',
-      recruiter: 'Jane Cooper',
-      recruiterEmail: 'jane.cooper@example.com',
-      skills: ['React', 'TypeScript', 'Node.js'],
-      reportCount: 1,
-      isFlagged: true,
-      applicants: [
-        {
-          id: 'a1',
-          name: 'John Doe',
-          email: 'john@email.com',
-          appliedDate: 'Jan 10, 2024',
-          skillMatch: 92,
-          status: 'Shortlisted',
-        },
-        {
-          id: 'a2',
-          name: 'Jane Smith',
-          email: 'jane@email.com',
-          appliedDate: 'Jan 11, 2024',
-          skillMatch: 88,
-          status: 'Interviewed',
-        },
-        {
-          id: 'a3',
-          name: 'Bob Wilson',
-          email: 'bob@email.com',
-          appliedDate: 'Jan 12, 2024',
-          skillMatch: 75,
-          status: 'Applied',
-        },
-      ],
-    },
-    {
-      id: 'j1',
-      title: 'Senior React Developer',
-      company: 'Acme Corp',
-      location: 'Remote',
-      type: 'Full-Time',
-      status: 'Pending',
-      locationType: 'Remote',
-      applicantsCount: 24,
-      postedDate: '2026-02-15',
-      budget: '$80k - $100k / year',
-      experienceLevel: 'Mid',
-      recruiter: 'Jane Cooper',
-      recruiterEmail: 'jane.cooper@example.com',
-      skills: ['React', 'TypeScript', 'Node.js'],
-      reportCount: 1,
-      isFlagged: true,
-      applicants: [
-        {
-          id: 'a1',
-          name: 'John Doe',
-          email: 'john@email.com',
-          appliedDate: 'Jan 10, 2024',
-          skillMatch: 92,
-          status: 'Shortlisted',
-        },
-        {
-          id: 'a2',
-          name: 'Jane Smith',
-          email: 'jane@email.com',
-          appliedDate: 'Jan 11, 2024',
-          skillMatch: 88,
-          status: 'Interviewed',
-        },
-        {
-          id: 'a3',
-          name: 'Bob Wilson',
-          email: 'bob@email.com',
-          appliedDate: 'Jan 12, 2024',
-          skillMatch: 75,
-          status: 'Applied',
-        },
-      ],
-    },
-    {
-      id: 'j1',
-      title: 'Senior React Developer',
-      company: 'Acme Corp',
-      location: 'Remote',
-      type: 'Full-Time',
-      status: 'Pending',
-      locationType: 'Remote',
-      applicantsCount: 24,
-      postedDate: '2026-02-15',
-      budget: '$80k - $100k / year',
-      experienceLevel: 'Mid',
-      recruiter: 'Jane Cooper',
-      recruiterEmail: 'jane.cooper@example.com',
-      skills: ['React', 'TypeScript', 'Node.js'],
-      reportCount: 1,
-      isFlagged: true,
-      applicants: [
-        {
-          id: 'a1',
-          name: 'John Doe',
-          email: 'john@email.com',
-          appliedDate: 'Jan 10, 2024',
-          skillMatch: 92,
-          status: 'Shortlisted',
-        },
-        {
-          id: 'a2',
-          name: 'Jane Smith',
-          email: 'jane@email.com',
-          appliedDate: 'Jan 11, 2024',
-          skillMatch: 88,
-          status: 'Interviewed',
-        },
-        {
-          id: 'a3',
-          name: 'Bob Wilson',
-          email: 'bob@email.com',
-          appliedDate: 'Jan 12, 2024',
-          skillMatch: 75,
-          status: 'Applied',
-        },
-      ],
-    },
-    {
-      id: 'j1',
-      title: 'Senior React Developer',
-      company: 'Acme Corp',
-      location: 'Remote',
-      type: 'Full-Time',
-      status: 'Pending',
-      locationType: 'Remote',
-      applicantsCount: 24,
-      postedDate: '2026-02-15',
-      budget: '$80k - $100k / year',
-      experienceLevel: 'Mid',
-      recruiter: 'Jane Cooper',
-      recruiterEmail: 'jane.cooper@example.com',
-      skills: ['React', 'TypeScript', 'Node.js'],
-      reportCount: 1,
-      isFlagged: true,
-      applicants: [
-        {
-          id: 'a1',
-          name: 'John Doe',
-          email: 'john@email.com',
-          appliedDate: 'Jan 10, 2024',
-          skillMatch: 92,
-          status: 'Shortlisted',
-        },
-        {
-          id: 'a2',
-          name: 'Jane Smith',
-          email: 'jane@email.com',
-          appliedDate: 'Jan 11, 2024',
-          skillMatch: 88,
-          status: 'Interviewed',
-        },
-        {
-          id: 'a3',
-          name: 'Bob Wilson',
-          email: 'bob@email.com',
-          appliedDate: 'Jan 12, 2024',
-          skillMatch: 75,
-          status: 'Applied',
-        },
-      ],
-    },
-    {
-      id: 'j1',
-      title: 'Senior React Developer',
-      company: 'Acme Corp',
-      location: 'Remote',
-      type: 'Full-Time',
-      status: 'Pending',
-      locationType: 'Remote',
-      applicantsCount: 24,
-      postedDate: '2026-02-15',
-      budget: '$80k - $100k / year',
-      experienceLevel: 'Mid',
-      recruiter: 'Jane Cooper',
-      recruiterEmail: 'jane.cooper@example.com',
-      skills: ['React', 'TypeScript', 'Node.js'],
-      reportCount: 1,
-      isFlagged: true,
-      applicants: [
-        {
-          id: 'a1',
-          name: 'John Doe',
-          email: 'john@email.com',
-          appliedDate: 'Jan 10, 2024',
-          skillMatch: 92,
-          status: 'Shortlisted',
-        },
-        {
-          id: 'a2',
-          name: 'Jane Smith',
-          email: 'jane@email.com',
-          appliedDate: 'Jan 11, 2024',
-          skillMatch: 88,
-          status: 'Interviewed',
-        },
-        {
-          id: 'a3',
-          name: 'Bob Wilson',
-          email: 'bob@email.com',
-          appliedDate: 'Jan 12, 2024',
-          skillMatch: 75,
-          status: 'Applied',
-        },
-      ],
-    },
-    {
-      id: 'j1',
-      title: 'Senior React Developer',
-      company: 'Acme Corp',
-      location: 'Remote',
-      type: 'Full-Time',
-      status: 'Pending',
-      locationType: 'Remote',
-      applicantsCount: 24,
-      postedDate: '2026-02-15',
-      budget: '$80k - $100k / year',
-      experienceLevel: 'Mid',
-      recruiter: 'Jane Cooper',
-      recruiterEmail: 'jane.cooper@example.com',
-      skills: ['React', 'TypeScript', 'Node.js'],
-      reportCount: 1,
-      isFlagged: true,
-      applicants: [
-        {
-          id: 'a1',
-          name: 'John Doe',
-          email: 'john@email.com',
-          appliedDate: 'Jan 10, 2024',
-          skillMatch: 92,
-          status: 'Shortlisted',
-        },
-        {
-          id: 'a2',
-          name: 'Jane Smith',
-          email: 'jane@email.com',
-          appliedDate: 'Jan 11, 2024',
-          skillMatch: 88,
-          status: 'Interviewed',
-        },
-        {
-          id: 'a3',
-          name: 'Bob Wilson',
-          email: 'bob@email.com',
-          appliedDate: 'Jan 12, 2024',
-          skillMatch: 75,
-          status: 'Applied',
-        },
-      ],
-    },
-    {
-      id: 'j1',
-      title: 'Senior React Developer',
-      company: 'Acme Corp',
-      location: 'Remote',
-      type: 'Full-Time',
-      status: 'Pending',
-      locationType: 'Remote',
-      applicantsCount: 24,
-      postedDate: '2026-02-15',
-      budget: '$80k - $100k / year',
-      experienceLevel: 'Mid',
-      recruiter: 'Jane Cooper',
-      recruiterEmail: 'jane.cooper@example.com',
-      skills: ['React', 'TypeScript', 'Node.js'],
-      reportCount: 1,
-      isFlagged: true,
-      applicants: [
-        {
-          id: 'a1',
-          name: 'John Doe',
-          email: 'john@email.com',
-          appliedDate: 'Jan 10, 2024',
-          skillMatch: 92,
-          status: 'Shortlisted',
-        },
-        {
-          id: 'a2',
-          name: 'Jane Smith',
-          email: 'jane@email.com',
-          appliedDate: 'Jan 11, 2024',
-          skillMatch: 88,
-          status: 'Interviewed',
-        },
-        {
-          id: 'a3',
-          name: 'Bob Wilson',
-          email: 'bob@email.com',
-          appliedDate: 'Jan 12, 2024',
-          skillMatch: 75,
-          status: 'Applied',
-        },
-      ],
-    },
-    {
-      id: 'j1',
-      title: 'Senior React Developer',
-      company: 'Acme Corp',
-      location: 'Remote',
-      type: 'Full-Time',
-      status: 'Pending',
-      locationType: 'Remote',
-      applicantsCount: 24,
-      postedDate: '2026-02-15',
-      budget: '$80k - $100k / year',
-      experienceLevel: 'Mid',
-      recruiter: 'Jane Cooper',
-      recruiterEmail: 'jane.cooper@example.com',
-      skills: ['React', 'TypeScript', 'Node.js'],
-      reportCount: 1,
-      isFlagged: true,
-      applicants: [
-        {
-          id: 'a1',
-          name: 'John Doe',
-          email: 'john@email.com',
-          appliedDate: 'Jan 10, 2024',
-          skillMatch: 92,
-          status: 'Shortlisted',
-        },
-        {
-          id: 'a2',
-          name: 'Jane Smith',
-          email: 'jane@email.com',
-          appliedDate: 'Jan 11, 2024',
-          skillMatch: 88,
-          status: 'Interviewed',
-        },
-        {
-          id: 'a3',
-          name: 'Bob Wilson',
-          email: 'bob@email.com',
-          appliedDate: 'Jan 12, 2024',
-          skillMatch: 75,
-          status: 'Applied',
-        },
-      ],
-    },
+      locationType: item?.WorkMode || 'On-site',
+      applicantsCount: 0,
+      postedDate: item?.createdAt || item?.updatedAt || '',
+      budget:
+        item?.SalaryType === 'Negotiable'
+          ? 'Negotiable'
+          : formatBudget(item?.Salary, item?.SalaryType),
+      experienceLevel: item?.Experience || '',
+      recruiter: recruiter?.Fullname || '',
+      recruiterEmail: recruiter?.email || '',
+      skills: Array.isArray(item?.MandatorySkills) ? item.MandatorySkills : [],
+      reportCount: 0,
+      isFlagged: false,
+      description: item?.JobDescription || '',
+      applicants: [],
+    };
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        const base = import.meta.env.VITE_API_URL || '';
+        const url = `${base}/gknbvg/SkillPort-admin/ertqyuiok/get-all-job-posts`;
+        const getCookie = (name) => {
+          try {
+            return document.cookie
+              .split('; ')
+              .find((row) => row.startsWith(`${name}=`))
+              ?.split('=')[1];
+          } catch {
+            return '';
+          }
+        };
+        const token =
+          import.meta.env.VITE_ADMIN_TOKEN ||
+          (getCookie && getCookie('AdminToken')) ||
+          (typeof window !== 'undefined' && window.ADMIN_TOKEN) ||
+          (typeof window !== 'undefined' &&
+            window.localStorage &&
+            window.localStorage.getItem('admin_token')) ||
+          '';
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        const json = await res.json();
+        const items = Array.isArray(json?.data) ? json.data : [];
+        const mapped = items.map(mapApiJob);
+        setJobs(mapped);
+        setTotalCount(mapped.length);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          setError('Failed to load jobs');
+          setJobs([]);
+          setTotalCount(0);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    };
     
-  ];
+    const timer = setTimeout(() => {
+        load();
+    }, 300);
+
+    return () => {
+        clearTimeout(timer);
+        controller.abort();
+    };
+  }, []);
 
   const filteredJobs = jobs.filter((job) => {
     if (activeTab === 'pending' && job.status !== 'Pending') {
@@ -952,7 +489,7 @@ export const JobsAndInternship = () => {
 
         <JobsTable
           jobs={filteredJobs}
-          totalCount={jobs.length}
+          totalCount={totalCount}
           selectedJobIds={selectedJobIds}
           allSelected={allVisibleSelected}
           onToggleAll={handleToggleAllVisible}

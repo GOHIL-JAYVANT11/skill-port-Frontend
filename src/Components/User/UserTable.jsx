@@ -34,8 +34,43 @@ const UserTable = ({
   onOpenSoftDeleteUser,
   onOpenUserVerification,
 }) => {
-  const [activeMenuRowIndex, setActiveMenuRowIndex] = useState(null);
+  const [activeMenuState, setActiveMenuState] = useState(null); // { user, top, right }
   const selectedCount = selectedUserIds.length;
+
+  const handleMenuClick = (event, user) => {
+    event.stopPropagation();
+    if (activeMenuState && activeMenuState.user.id === user.id) {
+      setActiveMenuState(null);
+    } else {
+      const rect = event.currentTarget.getBoundingClientRect();
+      // Calculate position relative to viewport
+      const top = rect.bottom + window.scrollY;
+      const right = window.innerWidth - rect.right;
+      
+      // Check if near bottom of screen
+      const isNearBottom = rect.bottom > window.innerHeight - 250;
+      
+      setActiveMenuState({
+        user,
+        top: isNearBottom ? 'auto' : top,
+        bottom: isNearBottom ? window.innerHeight - rect.top : 'auto',
+        right,
+        placement: isNearBottom ? 'top' : 'bottom',
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    const handleClickOutside = () => setActiveMenuState(null);
+    window.addEventListener('click', handleClickOutside);
+    window.addEventListener('resize', handleClickOutside);
+    window.addEventListener('scroll', handleClickOutside, true);
+    return () => {
+      window.removeEventListener('click', handleClickOutside);
+      window.removeEventListener('resize', handleClickOutside);
+      window.removeEventListener('scroll', handleClickOutside, true);
+    };
+  }, []);
 
   return (
     <div className="mt-6 rounded-2xl border border-slate-100 bg-white shadow-sm">
@@ -169,59 +204,15 @@ const UserTable = ({
                   <td className="relative px-4 py-3 text-right">
                     <button
                       type="button"
-                      onClick={() =>
-                        setActiveMenuRowIndex((current) =>
-                          current === index ? null : index,
-                        )
-                      }
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                      onClick={(e) => handleMenuClick(e, user)}
+                      className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+                        activeMenuState?.user?.id === user.id
+                          ? 'bg-slate-100 text-slate-600'
+                          : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+                      }`}
                     >
                       <MoreHorizontal className="h-4 w-4" />
                     </button>
-                    {activeMenuRowIndex === index && (
-                      <ActivityOfData
-                        accountStatus={user.accountStatus}
-                        verificationStatus={user.verificationStatus}
-                        reportsCount={user.reportsCount}
-                        placement={isNearBottom ? 'top' : 'bottom'}
-                        onViewProfile={() => {
-                          if (onOpenProfile) {
-                            onOpenProfile(user);
-                          }
-                          setActiveMenuRowIndex(null);
-                        }}
-                        onViewActivity={() => {
-                          if (onOpenActivityLog) {
-                            onOpenActivityLog(user);
-                          }
-                          setActiveMenuRowIndex(null);
-                        }}
-                        onRevokeVerification={() => {
-                          if (onOpenRevokeVerification) {
-                            onOpenRevokeVerification(user);
-                          }
-                          setActiveMenuRowIndex(null);
-                        }}
-                        onBlockUser={() => {
-                          if (onOpenBlockUser) {
-                            onOpenBlockUser(user);
-                          }
-                          setActiveMenuRowIndex(null);
-                        }}
-                        onSoftDeleteUser={() => {
-                          if (onOpenSoftDeleteUser) {
-                            onOpenSoftDeleteUser(user);
-                          }
-                          setActiveMenuRowIndex(null);
-                        }}
-                        onUserVerification={() => {
-                          if (onOpenUserVerification) {
-                            onOpenUserVerification(user);
-                          }
-                          setActiveMenuRowIndex(null);
-                        }}
-                      />
-                    )}
                   </td>
                 </tr>
               );
@@ -229,6 +220,52 @@ const UserTable = ({
           </tbody>
         </table>
       </div>
+
+      {activeMenuState && (
+        <div
+          style={{
+            position: 'fixed',
+            top: activeMenuState.top !== 'auto' ? activeMenuState.top : 'auto',
+            bottom: activeMenuState.bottom !== 'auto' ? activeMenuState.bottom : 'auto',
+            right: activeMenuState.right,
+            zIndex: 50,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ActivityOfData
+            accountStatus={activeMenuState.user.accountStatus}
+            verificationStatus={activeMenuState.user.verificationStatus}
+            reportsCount={activeMenuState.user.reportsCount}
+            placement={activeMenuState.placement}
+            className="!absolute !right-0 !top-0 !bottom-auto" // Override positioning
+            style={{ marginTop: '0.5rem' }}
+            onViewProfile={() => {
+              if (onOpenProfile) onOpenProfile(activeMenuState.user);
+              setActiveMenuState(null);
+            }}
+            onViewActivity={() => {
+              if (onOpenActivityLog) onOpenActivityLog(activeMenuState.user);
+              setActiveMenuState(null);
+            }}
+            onRevokeVerification={() => {
+              if (onOpenRevokeVerification) onOpenRevokeVerification(activeMenuState.user);
+              setActiveMenuState(null);
+            }}
+            onBlockUser={() => {
+              if (onOpenBlockUser) onOpenBlockUser(activeMenuState.user);
+              setActiveMenuState(null);
+            }}
+            onSoftDeleteUser={() => {
+              if (onOpenSoftDeleteUser) onOpenSoftDeleteUser(activeMenuState.user);
+              setActiveMenuState(null);
+            }}
+            onUserVerification={() => {
+              if (onOpenUserVerification) onOpenUserVerification(activeMenuState.user);
+              setActiveMenuState(null);
+            }}
+          />
+        </div>
+      )}
 
       <div className="flex items-center justify-between border-t border-slate-100 px-4 py-3 text-xs text-slate-500">
         <div>
