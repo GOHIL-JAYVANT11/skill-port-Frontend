@@ -99,7 +99,12 @@ const CompaniesTable = ({
           <thead className="sticky top-0 z-10 bg-slate-50/80 backdrop-blur">
             <tr className="text-[11px] uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3">
-                <span className="sr-only">Select</span>
+                <input
+                  type="checkbox"
+                  className="mt-1 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                  checked={allSelected}
+                  onChange={onToggleSelectAll}
+                />
               </th>
               <th className="px-3 py-3 font-medium">Company</th>
               <th className="px-3 py-3 font-medium">Primary Recruiter</th>

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import DashboardHeader from '../Components/Dashboard/DashboardHeader.jsx';
 import DashboardStatsGrid from '../Components/Dashboard/DashboardStatsGrid.jsx';
 import RevenueOverviewCard from '../Components/Dashboard/RevenueOverviewCard.jsx';
@@ -13,8 +13,16 @@ import {
   useDashboardChartCardAnimation,
   useDashboardMeetingsAnimation,
   useDashboardStaggeredListAnimation,
-  useDashboardQuickActionsAnimation,
 } from '../lib/BTNGsapanimation.jsx';
+import {
+  getDashboardStats,
+  getRevenueOverview,
+  getUserGrowth,
+  getMeetingsSchedule,
+  getJobsAndProjectsOverview,
+  getTopPerformers,
+  getActivityFeed,
+} from '../lib/dashboardData.js';
 
 export const Dashboard = () => {
   const [refreshToken, setRefreshToken] = useState(0);
@@ -28,6 +36,21 @@ export const Dashboard = () => {
   const jobsProjectsCardRef = useRef(null);
   const activityFeedListRef = useRef(null);
   const topPerformersListRef = useRef(null);
+
+  const dashboardData = useMemo(() => {
+    if (refreshToken >= 0) { 
+      return {
+        stats: getDashboardStats(),
+        revenue: getRevenueOverview(),
+        userGrowth: getUserGrowth(),
+        meetings: getMeetingsSchedule(),
+        jobsProjects: getJobsAndProjectsOverview(),
+        topPerformers: getTopPerformers(),
+        activityFeed: getActivityFeed(),
+      };
+    }
+    return {};
+  }, [refreshToken]);
 
   useDashboardHeaderAnimation(headerRef, refreshButtonRef, refreshToken);
   useDashboardStatsAnimation(statsCardsRef, refreshToken);
@@ -52,21 +75,20 @@ export const Dashboard = () => {
         headerRef={headerRef}
         refreshButtonRef={refreshButtonRef}
       />
-      <DashboardStatsGrid cardsRef={statsCardsRef} />
+      <DashboardStatsGrid cardsRef={statsCardsRef} stats={dashboardData.stats} />
       <div className="grid gap-6 md:grid-cols-2">
-        <RevenueOverviewCard cardRef={revenueCardRef} />
-        <UserGrowthCard cardRef={userGrowthCardRef} />
+        <RevenueOverviewCard cardRef={revenueCardRef} data={dashboardData.revenue} />
+        <UserGrowthCard cardRef={userGrowthCardRef} data={dashboardData.userGrowth} />
       </div>
       <div className="mt-6">
-        <MeetingsScheduleCard cardRef={meetingsCardRef} />
+        <MeetingsScheduleCard cardRef={meetingsCardRef} data={dashboardData.meetings} />
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <JobsProjectsOverviewCard cardRef={jobsProjectsCardRef} />
-        <TopPerformersCard listRef={topPerformersListRef} />
+        <JobsProjectsOverviewCard cardRef={jobsProjectsCardRef} data={dashboardData.jobsProjects} />
+        <TopPerformersCard listRef={topPerformersListRef} performers={dashboardData.topPerformers} />
       </div>
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <ActivityFeedCard listRef={activityFeedListRef} />
-        {/* <QuickActionsCard cardRef={quickActionsCardRef} /> */}
+        <ActivityFeedCard listRef={activityFeedListRef} activities={dashboardData.activityFeed} />
       </div>
     </div>
   );

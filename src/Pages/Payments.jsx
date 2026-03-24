@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   ArrowDownRight,
@@ -46,47 +46,37 @@ const Payments = () => {
   });
   const [detailView, setDetailView] = useState('payments');
 
-  const jobPayments = useMemo(
-    () => [
-      {
-        id: 'JOB-TRX-001',
-        company: 'TechCorp Inc.',
-        candidate: 'Anita Sharma',
-        jobTitle: 'Senior Frontend Engineer',
-        monthlySalary: 150000,
-        commissionPercent: 10,
-        commissionAmount: 15000,
-        paymentStatus: 'Paid',
-        hireDate: '2026-01-19',
-        replacementStatus: 'Normal',
-      },
-      {
-        id: 'JOB-TRX-002',
-        company: 'BrightPath Learning',
-        candidate: 'Karan Mehta',
-        jobTitle: 'Backend Developer',
-        monthlySalary: 110000,
-        commissionPercent: 10,
-        commissionAmount: 11000,
-        paymentStatus: 'Pending',
-        hireDate: '2026-01-22',
-        replacementStatus: 'Replacement Required',
-      },
-      {
-        id: 'JOB-TRX-003',
-        company: 'UrbanWorks Studio',
-        candidate: 'Meera Iyer',
-        jobTitle: 'Product Designer',
-        monthlySalary: 130000,
-        commissionPercent: 10,
-        commissionAmount: 13000,
-        paymentStatus: 'Paid',
-        hireDate: '2026-01-18',
-        replacementStatus: 'Replacement Provided',
-      },
-    ],
-    [],
-  );
+  const [jobPayments, setJobPayments] = useState([]);
+
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        const response = await fetch('http://localhost:4518/api/payments/all-payments');
+        const data = await response.json();
+        if (data && Array.isArray(data.data)) {
+          const formattedPayments = data.data.map((payment) => ({
+            id: payment._id,
+            company: payment.recruiterId?.Fullname || 'N/A',
+            candidate: payment.candidateId?.Fullname || 'N/A',
+            jobTitle: payment.jobId?.jobtitle || 'N/A',
+            monthlySalary: payment.monthlySalary || 0,
+            commissionPercent: payment.commissionPercent || 0,
+            commissionAmount: payment.commissionAmount || 0,
+            paymentStatus: payment.status,
+            hireDate: payment.createdAt ? new Date(payment.createdAt).toLocaleDateString() : 'N/A',
+            replacementStatus: payment.replacementStatus || 'Normal',
+          }));
+          setJobPayments(formattedPayments);
+        } else {
+          setJobPayments([]);
+        }
+      } catch (error) {
+        console.error('Error fetching payments:', error);
+      }
+    };
+
+    fetchPayments();
+  }, []);
 
   const freelancePayments = useMemo(
     () => [

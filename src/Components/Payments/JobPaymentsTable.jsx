@@ -38,6 +38,12 @@ const JobPaymentsTable = ({ rows, formatCurrency }) => {
         <table className="min-w-full border-separate border-spacing-0 text-left text-xs">
           <thead className="sticky top-0 z-10 bg-slate-50/80 text-[11px] font-semibold uppercase tracking-wide text-slate-500 backdrop-blur">
             <tr>
+              <th className="px-4 py-2">
+                <input
+                  type="checkbox"
+                  className="h-3.5 w-3.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                />
+              </th>
               <th className="px-4 py-2">Transaction ID</th>
               <th className="px-4 py-2">Company</th>
               <th className="px-4 py-2">Candidate</th>

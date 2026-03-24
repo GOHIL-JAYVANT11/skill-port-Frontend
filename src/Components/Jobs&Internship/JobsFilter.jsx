@@ -70,6 +70,7 @@ const JobsFilter = ({ selectedFilters, onChange, onClose, onApply }) => {
       [field]: value,
     });
   };
+  
 
   const handleToggleSkill = (skill) => {
     const current = selectedFilters.skills || [];
